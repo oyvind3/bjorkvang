@@ -1,0 +1,34 @@
+name: librebooking
+
+services:
+  db:
+    image: linuxserver/mariadb:10.6.13
+    restart: always
+    volumes:
+      - db_data:/config
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - MYSQL_ROOT_PASSWORD=your_secure_root_password
+
+  app:
+    image: librebooking/librebooking:develop
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+    volumes:
+      - app_config:/config
+    environment:
+      - LB_DB_NAME=librebooking
+      - LB_DB_USER=lb_user
+      - LB_DB_USER_PWD=your_secure_user_password
+      - LB_DB_HOST=db
+      - LB_INSTALL_PWD=your_installation_password
+      - TZ=America/New_York
+
+volumes:
+  db_data:
+  app_config:
