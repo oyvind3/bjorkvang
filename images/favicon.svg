@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Bjørkvang">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f4d3b" />
+      <stop offset="100%" stop-color="#3b9071" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)" />
+  <g fill="#f4f0e6" font-family="'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-weight="700">
+    <text font-size="26" x="50%" y="34" text-anchor="middle">BH</text>
+    <text font-size="10" x="50%" y="49" text-anchor="middle">VEL</text>
+  </g>
+</svg>

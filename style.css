@@ -429,6 +429,41 @@ button {
     max-width: clamp(280px, 40vw, 520px);
 }
 
+.hero-media--summary {
+    max-width: 360px;
+    padding: 1.5rem 1.75rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    text-align: left;
+}
+
+.hero-media--summary::before {
+    display: none;
+}
+
+.hero-media-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.4rem;
+    color: var(--brand-600);
+    margin-bottom: 0.75rem;
+}
+
+.hero-media-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.hero-media--summary .hero-caption {
+    text-align: left;
+    margin-top: 1rem;
+}
+
 .hero-caption {
     margin-top: 0.75rem;
     color: var(--text-muted);
@@ -561,6 +596,24 @@ button {
     margin: 2rem 0;
     display: grid;
     gap: 1rem;
+}
+
+.vipps-callout figure {
+    margin: 0;
+    text-align: center;
+}
+
+.vipps-callout img {
+    max-width: 220px;
+    width: 100%;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+}
+
+.vipps-callout figcaption {
+    margin-top: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
 }
 
 .vipps-steps {
@@ -729,6 +782,60 @@ label {
     grid-column: 1 / -1;
 }
 
+.form-fieldset--full {
+    grid-column: 1 / -1;
+}
+
+.form-fieldset {
+    border: 1px solid rgba(37, 120, 90, 0.16);
+    border-radius: var(--radius-md);
+    padding: 1.25rem clamp(1rem, 2vw, 1.5rem);
+    display: grid;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.form-fieldset legend {
+    font-weight: 700;
+    color: var(--brand-600);
+}
+
+.fieldset-description {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.option-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.option-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(37, 120, 90, 0.08);
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), box-shadow var(--transition);
+}
+
+.option-pill input {
+    accent-color: var(--brand-500);
+    margin: 0;
+}
+
+.option-pill:hover,
+.option-pill:focus-within {
+    background: rgba(37, 120, 90, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(37, 120, 90, 0.25);
+}
+
 .form-actions {
     display: flex;
     align-items: center;
@@ -857,6 +964,97 @@ button[type="submit"] {
     margin: 0;
     color: var(--text-secondary);
     font-size: 0.95rem;
+}
+
+.process-callout {
+    padding: 1.75rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface-muted);
+    box-shadow: inset 0 0 0 1px rgba(37, 120, 90, 0.12);
+}
+
+.process-callout h3 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--brand-600);
+}
+
+.process-callout ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 0.6rem;
+    color: var(--text-secondary);
+}
+
+.process-callout li {
+    font-weight: 500;
+}
+
+.safety-overview {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    margin-top: 2rem;
+}
+
+.safety-card {
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    display: grid;
+    gap: 0.75rem;
+}
+
+.safety-card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--brand-600);
+}
+
+.safety-card ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--text-secondary);
+    display: grid;
+    gap: 0.4rem;
+}
+
+.agreement-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.agreement-grid article {
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    display: grid;
+    gap: 0.75rem;
+}
+
+.agreement-grid h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--brand-600);
+}
+
+.agreement-grid ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--text-secondary);
+    display: grid;
+    gap: 0.4rem;
+}
+
+.agreement-note {
+    margin-top: 1.25rem;
+    color: var(--text-secondary);
 }
 
 .reservation-notes {

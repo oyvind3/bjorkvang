@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function () {
   const timeInput = document.getElementById('time');
   const durationInputEl = document.getElementById('duration');
   const eventTypeSelect = document.getElementById('event-type');
+  const phoneInput = document.getElementById('phone');
+  const attendeesInput = document.getElementById('attendees');
 
   const showStatus = (message, type = 'success') => {
     if (!statusEl) {
@@ -55,7 +57,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const eventType = extended.eventType || 'Reservasjon';
     const message = extended.message || '';
     const email = extended.email || '';
+    const phone = extended.phone || '';
     const duration = extended.duration || Math.max(1, Math.round((safeEnd - startDate) / (60 * 60 * 1000)));
+    const spaces = Array.isArray(extended.spaces)
+      ? extended.spaces
+      : typeof extended.spaces === 'string' && extended.spaces.length > 0
+        ? extended.spaces.split(',').map((value) => value.trim()).filter(Boolean)
+        : [];
+    const services = Array.isArray(extended.services)
+      ? extended.services
+      : typeof extended.services === 'string' && extended.services.length > 0
+        ? extended.services.split(',').map((value) => value.trim()).filter(Boolean)
+        : [];
+    const attendees =
+      typeof extended.attendees === 'number'
+        ? extended.attendees
+        : typeof extended.attendees === 'string' && extended.attendees.trim() !== ''
+          ? Number.parseInt(extended.attendees, 10)
+          : null;
 
     return {
       title: `${eventType} – ${name}`,
@@ -65,9 +84,13 @@ document.addEventListener('DOMContentLoaded', function () {
         ...extended,
         name,
         email,
+        phone,
         message,
         duration,
         eventType,
+        spaces,
+        services,
+        attendees: Number.isFinite(attendees) ? attendees : null,
         createdAt: extended.createdAt || new Date().toISOString()
       }
     };
@@ -148,7 +171,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const host = document.createElement('p');
       host.className = 'reservation-meta';
-      host.textContent = `Ansvarlig: ${event.extendedProps?.name || 'Ukjent'}`;
+      const contactParts = [event.extendedProps?.name || 'Ukjent'];
+      if (event.extendedProps?.phone) {
+        contactParts.push(event.extendedProps.phone);
+      }
+      host.textContent = `Ansvarlig: ${contactParts.join(' – ')}`;
       listItem.appendChild(host);
 
       const durationHours = event.extendedProps?.duration || Math.max(1, Math.round((endDate - startDate) / (60 * 60 * 1000)));
@@ -156,6 +183,27 @@ document.addEventListener('DOMContentLoaded', function () {
       duration.className = 'reservation-meta';
       duration.textContent = `Varighet: ${durationHours} ${durationHours === 1 ? 'time' : 'timer'}`;
       listItem.appendChild(duration);
+
+      if (event.extendedProps?.spaces?.length) {
+        const spaces = document.createElement('p');
+        spaces.className = 'reservation-meta';
+        spaces.textContent = `Omfang: ${event.extendedProps.spaces.join(', ')}`;
+        listItem.appendChild(spaces);
+      }
+
+      if (Number.isFinite(event.extendedProps?.attendees) && event.extendedProps.attendees > 0) {
+        const attendees = document.createElement('p');
+        attendees.className = 'reservation-meta';
+        attendees.textContent = `Antall deltakere (ca.): ${event.extendedProps.attendees}`;
+        listItem.appendChild(attendees);
+      }
+
+      if (event.extendedProps?.services?.length) {
+        const services = document.createElement('p');
+        services.className = 'reservation-meta';
+        services.textContent = `Tillegg: ${event.extendedProps.services.join(', ')}`;
+        listItem.appendChild(services);
+      }
 
       if (event.extendedProps?.message) {
         const note = document.createElement('p');
@@ -246,9 +294,12 @@ document.addEventListener('DOMContentLoaded', function () {
               ? start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
               : '';
 
+        const spaces = Array.isArray(info.event.extendedProps?.spaces) && info.event.extendedProps.spaces.length
+          ? `<br>${info.event.extendedProps.spaces.join(', ')}`
+          : '';
         tooltip.innerHTML =
           `<strong>${info.event.extendedProps?.eventType || 'Reservasjon'}</strong><br>` +
-          `${info.event.extendedProps?.name || ''}<br>` +
+          `${info.event.extendedProps?.name || ''}${spaces}<br>` +
           `${start ? start.toLocaleDateString('nb-NO') : ''} ${timeRange}`;
 
         document.body.appendChild(tooltip);
@@ -278,14 +329,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const name = document.getElementById('name')?.value.trim();
       const email = document.getElementById('email')?.value.trim();
+      const phone = phoneInput?.value.trim();
       const dateValue = dateInput?.value;
       const timeValue = timeInput?.value;
       const durationInput = durationInputEl?.value;
       const eventType = eventTypeSelect?.value || '';
       const message = document.getElementById('message')?.value.trim() || '';
+      const attendees = attendeesInput?.value.trim() || '';
+      const selectedSpaces = Array.from(form.querySelectorAll('input[name="spaces"]:checked')).map((input) => input.value);
+      const selectedServices = Array.from(form.querySelectorAll('input[name="services"]:checked')).map((input) => input.value);
 
-      if (!name || !email || !dateValue || !timeValue || !durationInput || !eventType) {
+      if (!name || !email || !phone || !dateValue || !timeValue || !durationInput || !eventType) {
         showStatus('Vennligst fyll ut alle obligatoriske felter.', 'error');
+        return;
+      }
+
+      if (!selectedSpaces.length) {
+        showStatus('Velg minst ett område du ønsker å leie.', 'error');
         return;
       }
 
@@ -318,6 +378,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      const attendeeCount = attendees !== '' && Number.isFinite(Number.parseInt(attendees, 10))
+        ? Number.parseInt(attendees, 10)
+        : null;
+
       const newEvent = {
         title: `${eventType} – ${name}`,
         start: startDate.toISOString(),
@@ -325,9 +389,13 @@ document.addEventListener('DOMContentLoaded', function () {
         extendedProps: {
           name,
           email,
+          phone,
           message,
           duration,
           eventType,
+          spaces: selectedSpaces,
+          services: selectedServices,
+          attendees: attendeeCount,
           createdAt: new Date().toISOString()
         }
       };

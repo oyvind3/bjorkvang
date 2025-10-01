@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regler og instruks – Bjørkvang forsamlingslokale og Helgøens Vel</title>
+    <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -49,10 +50,15 @@
                     <a class="button secondary" href="#rental-rules">Se leieavtalen</a>
                 </div>
             </div>
-            <figure class="hero-media">
-                <img src="images/981ED216-C4FB-45C8-8862-E7A537F76A9A.jpeg" alt="Oversikt over nødutganger og brannslukkere på Bjørkvang">
-                <figcaption class="hero-caption">Kart over rømningsveier og slukkere henger i lokalet.</figcaption>
-            </figure>
+            <div class="hero-media hero-media--summary">
+                <h2 class="hero-media-title">Kortversjon</h2>
+                <ul class="hero-media-list">
+                    <li>Varsle 110 og informer alle i bygget dersom alarmen går.</li>
+                    <li>Branninstruks og nødutstyr er plassert ved hovedinngangen.</li>
+                    <li>Leieavtalen signeres digitalt etter at forespørselen er godkjent.</li>
+                </ul>
+                <p class="hero-caption">Full instruks og avtale finner du i seksjonene under.</p>
+            </div>
         </div>
     </section>
 
@@ -77,8 +83,32 @@
                     <li><strong>Hvor:</strong> Nøyaktig stedsangivelse, bekreft meldingen og hold forbindelsen til nødnummeret.</li>
                 </ul>
                 <p>Nødtelefonnumre: Brann 110, Politi 112, Ambulanse 113.</p>
-                <p>Kart over nødutganger og brannslukkere:</p>
-                <img src="images/981ED216-C4FB-45C8-8862-E7A537F76A9A.jpeg" alt="Nødutganger og brannslukkere">
+                <div class="safety-overview" role="list">
+                    <article class="safety-card" role="listitem">
+                        <h3>Nødutganger</h3>
+                        <ul>
+                            <li><strong>Hovedinngang:</strong> direkte ut til tunet med oppmøtested ved flaggstangen.</li>
+                            <li><strong>Sceneutgang:</strong> leder til bakre parkeringsplass.</li>
+                            <li><strong>Kjøkkenutgang:</strong> leder til bakinngang og rømningsvei bak huset.</li>
+                        </ul>
+                    </article>
+                    <article class="safety-card" role="listitem">
+                        <h3>Slukkere og alarm</h3>
+                        <ul>
+                            <li><strong>Håndslukker:</strong> ved hovedinngang, kjøkken og scenen.</li>
+                            <li><strong>Brannteppe:</strong> henger lett tilgjengelig på kjøkkenet.</li>
+                            <li><strong>Hovedbryter:</strong> strøm kan kuttes i sikringsskapet ved garderoben.</li>
+                        </ul>
+                    </article>
+                    <article class="safety-card" role="listitem">
+                        <h3>Under arrangement</h3>
+                        <ul>
+                            <li>Hold rømningsveiene fri for stoler og utstyr.</li>
+                            <li>Sørg for at minst én ansvarlig vet hvor nødutstyr står.</li>
+                            <li>Gjennomfør kort orientering til frivillige og leverandører.</li>
+                        </ul>
+                    </article>
+                </div>
             </div>
         </section>
 
@@ -104,8 +134,48 @@
                     <li>Leie av prosjektor: 500&nbsp;kr</li>
                     <li>Små møter og minnesamvær: 30&nbsp;kr per person</li>
                 </ul>
-                <p>Original leieavtale (PDF/scan):</p>
-                <img src="images/67A6972D-DA19-4F40-B0AC-0C283E59D9F2.jpeg" alt="Leieavtale">
+                <div class="agreement-grid">
+                    <article>
+                        <h3>Før arrangementet</h3>
+                        <ul>
+                            <li>Send inn leieforespørsel med ønsket dato, tidsrom og rom (se booking-siden).</li>
+                            <li>Styret bekrefter tilgjengelighet og sender digital kontrakt for signering.</li>
+                            <li>Eventuell nøkkeloverlevering avtales direkte med kontaktperson i styret.</li>
+                        </ul>
+                    </article>
+                    <article>
+                        <h3>Under leieforholdet</h3>
+                        <ul>
+                            <li>Følg branninstruksen og hold nødutganger tilgjengelige til enhver tid.</li>
+                            <li>Ansvarlig leietaker må være til stede og tilgjengelig på telefon.</li>
+                            <li>Skader på bygg eller inventar meldes umiddelbart til styret.</li>
+                        </ul>
+                    </article>
+                    <article>
+                        <h3>Etter arrangementet</h3>
+                        <ul>
+                            <li>Lokalet ryddes og vaskes i henhold til utsendt sjekkliste.</li>
+                            <li>Nøkler leveres tilbake etter avtale med kontaktperson.</li>
+                            <li>Eventuelle tilleggstjenester avregnes sammen med sluttfakturaen.</li>
+                        </ul>
+                    </article>
+                </div>
+                <p class="agreement-note">Spørsmål om kontrakt eller forsikring? Ta kontakt med styret på <a href="mailto:helgoens.vel@example.com">helgoens.vel@example.com</a>.</p>
+            </div>
+        </section>
+
+        <section class="page-section" id="digital-contract">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>Digital leiekontrakt på vei</h2>
+                    <p>Vi jobber med å gjøre hele leieprosessen heldigital. Det betyr at bekreftelse, kontrakt og signatur skjer elektronisk.</p>
+                </div>
+                <ul class="feature-list">
+                    <li>Forespørsler fra booking-siden sendes direkte til styret med all nødvendig informasjon.</li>
+                    <li>Digitale kontrakter gjør det enklere å oppdatere vilkår og signere fra mobil eller PC.</li>
+                    <li>Vedlegg som branninstruks og sjekklister følger den digitale kontrakten.</li>
+                </ul>
+                <p>Inntil løsningen er klar, følger vi opp per e-post og sørger for at du får kontrakten til signering så raskt som mulig.</p>
             </div>
         </section>
     </main>
