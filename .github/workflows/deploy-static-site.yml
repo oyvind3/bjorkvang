@@ -1,4 +1,4 @@
-name: Deploy Static Website to Azure Storage
+name: Deploy Static Site to Azure Storage
 
 on:
   push:
@@ -12,25 +12,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: Log in to Azure
+    - name: Log in to Azure with Service Principal
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Upload static site to Azure Storage
+    - name: Upload static site to $web container
       uses: azure/cli@v2
       with:
         inlineScript: |
-          az storage blob sync \
+          az storage blob upload-batch \
+            --destination '$web' \
             --account-name finsrudfrukt \
-            --source . \
-            --container '$web' \
+            --pattern '*.html' \
+            --overwrite true \
             --auth-mode login \
-            --delete-destination true \
-            --exclude-path ".github/*" \
-            --exclude-path "functions/*" \
-            --exclude-pattern "*.md" \
-            --exclude-pattern "docker-compose.yml"
+            --source .
+
+          az storage blob upload-batch \
+            --destination '$web' \
+            --account-name finsrudfrukt \
+            --pattern '*.css' \
+            --overwrite true \
+            --auth-mode login \
+            --source .
+
+          az storage blob upload-batch \
+            --destination '$web' \
+            --account-name finsrudfrukt \
+            --pattern '*.js' \
+            --overwrite true \
+            --auth-mode login \
+            --source .
+
+          az storage blob upload-batch \
+            --destination '$web/images' \
+            --account-name finsrudfrukt \
+            --auth-mode login \
+            --overwrite true \
+            --source ./images
+
+    - name: Logout of Azure
+      if: always()
+      run: az logout
