@@ -30,5 +30,7 @@ jobs:
             --container '$web' \
             --auth-mode login \
             --delete-destination true \
-            --exclude-path ".github/*" "functions/*" \
-            --exclude-pattern "*.md" "docker-compose.yml"
+            --exclude-path ".github/*" \
+            --exclude-path "functions/*" \
+            --exclude-pattern "*.md" \
+            --exclude-pattern "docker-compose.yml"
