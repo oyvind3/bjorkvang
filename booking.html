@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking – Bjørkvang Velforening</title>
+    <title>Booking – Bjørkvang forsamlingslokale og Helgøens Vel</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
 </head>
@@ -12,10 +12,10 @@
         <div class="container nav-container">
             <div class="branding">
                 <a class="logo" href="index.html">
-                    <span class="logo-mark" aria-hidden="true">BV</span>
+                    <span class="logo-mark" aria-hidden="true">BH</span>
                     <span class="logo-text">
-                        <span class="logo-title">Bjørkvang Velforening</span>
-                        <span class="logo-subtitle">Samlingspunktet på Helgøya</span>
+                        <span class="logo-title">Bjørkvang forsamlingslokale</span>
+                        <span class="logo-subtitle">Helgøens Vel</span>
                     </span>
                 </a>
             </div>
@@ -43,8 +43,13 @@
         <div class="container hero-inner">
             <div class="hero-content">
                 <span class="hero-eyebrow">Planlegg</span>
-                <h1 id="booking-hero-title">Book Bjørkvang til ditt neste arrangement</h1>
-                <p>Velg ledig dato i kalenderen og send oss en forespørsel. Vi bekrefter alle reservasjoner personlig slik at du får den hjelpen du trenger.</p>
+                <h1 id="booking-hero-title">Reserver Bjørkvang forsamlingslokale</h1>
+                <p>Kalenderen under viser oppdatert status for Helgøens Vel sitt forsamlingshus. Velg ønsket dato, legg inn detaljene og få bekreftelse fra styret.</p>
+                <div class="hero-badges" role="list">
+                    <span class="hero-badge" role="listitem">Tilgjengelighet i sanntid</span>
+                    <span class="hero-badge" role="listitem">Personlig oppfølging</span>
+                    <span class="hero-badge" role="listitem">Fleksible romløsninger</span>
+                </div>
                 <div class="hero-actions">
                     <a class="button" href="#calendar">Se ledige datoer</a>
                     <a class="button secondary" href="produkter.html">Sjekk priser</a>
@@ -59,12 +64,31 @@
 
     <main class="page-main">
         <section class="page-section">
-            <div class="container">
-                <div class="section-heading">
-                    <h2>Reserver ønsket tidspunkt</h2>
-                    <p>Kalenderen viser hvilke datoer som allerede er holdt av. Forespørsler som legges inn her blir lagret i nettleseren din og synliggjort for andre besøkende.</p>
+            <div class="container booking-layout">
+                <div class="booking-main">
+                    <div class="section-heading">
+                        <h2>Reserver ønsket tidspunkt</h2>
+                        <p>Kalenderen viser hvilke datoer som allerede er holdt av. Forespørsler som legges inn her blir lagret i nettleseren din og synliggjort for andre besøkende.</p>
+                    </div>
+                    <div id="calendar" aria-live="polite"></div>
+                    <p class="calendar-note">Velg dato direkte i kalenderen for å fylle ut skjemaet raskere. Dobbeltbooking hindres automatisk.</p>
+                    <div class="calendar-cta">
+                        <a class="button ghost" href="#booking-form">Gå til forespørselsskjema</a>
+                    </div>
                 </div>
-                <div id="calendar" aria-live="polite"></div>
+                <aside class="booking-aside" aria-labelledby="availability-heading">
+                    <h3 id="availability-heading">Slik leser du kalenderen</h3>
+                    <ul class="availability-list">
+                        <li><strong>Lyse dager</strong> er ledige og kan reserveres.</li>
+                        <li><strong>Markeringsfelt</strong> viser tidspunkt for bekreftede forespørsler.</li>
+                        <li>Du kan holde av inntil <strong>12 timer</strong> per reservasjon.</li>
+                    </ul>
+                    <div class="contact-card">
+                        <h4>Trenger du hjelp?</h4>
+                        <p>Har du spesielle behov for teknikk eller rigg, gi beskjed til styret så finner vi løsningen sammen.</p>
+                        <a class="button ghost" href="mailto:helgoens.vel@example.com">Kontakt bookingansvarlig</a>
+                    </div>
+                </aside>
             </div>
         </section>
 
@@ -75,27 +99,68 @@
                     <p>Fortell oss litt om arrangementet, så følger styret opp med bekreftelse og praktisk informasjon.</p>
                 </div>
                 <form id="booking-form">
-                    <label for="name">Navn</label>
-                    <input type="text" id="name" name="name" required>
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="name">Navn</label>
+                            <input type="text" id="name" name="name" autocomplete="name" required>
+                        </div>
 
-                    <label for="email">E-post</label>
-                    <input type="email" id="email" name="email" required>
+                        <div class="form-field">
+                            <label for="email">E-post</label>
+                            <input type="email" id="email" name="email" autocomplete="email" required>
+                        </div>
 
-                    <label for="date">Dato</label>
-                    <input type="date" id="date" name="date" required>
+                        <div class="form-field">
+                            <label for="event-type">Arrangementstype</label>
+                            <select id="event-type" name="eventType" required>
+                                <option value="" disabled selected>Velg arrangement</option>
+                                <option value="Familiefeiring">Familiefeiring</option>
+                                <option value="Møte eller kurs">Møte eller kurs</option>
+                                <option value="Konsert eller forestilling">Konsert eller forestilling</option>
+                                <option value="Dugnad eller nærmiljøtreff">Dugnad eller nærmiljøtreff</option>
+                                <option value="Annet">Annet</option>
+                            </select>
+                        </div>
 
-                    <label for="time">Starttid</label>
-                    <input type="time" id="time" name="time" required>
+                        <div class="form-field">
+                            <label for="date">Dato</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
 
-                    <label for="duration">Varighet (timer)</label>
-                    <input type="number" id="duration" name="duration" min="1" max="12" value="4" required>
+                        <div class="form-field">
+                            <label for="time">Starttid</label>
+                            <input type="time" id="time" name="time" required>
+                        </div>
 
-                    <label for="message">Tilleggsinformasjon</label>
-                    <textarea id="message" name="message" rows="4" placeholder="Hva skal lokalet brukes til?"></textarea>
+                        <div class="form-field">
+                            <label for="duration">Varighet (timer)</label>
+                            <input type="number" id="duration" name="duration" min="1" max="12" value="4" required>
+                        </div>
 
-                    <button class="button" type="submit">Send forespørsel</button>
-                    <p id="booking-status" class="form-status" role="status" aria-live="polite"></p>
+                        <div class="form-field form-field--full">
+                            <label for="message">Tilleggsinformasjon</label>
+                            <textarea id="message" name="message" rows="4" placeholder="Hva skal lokalet brukes til?"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button" type="submit">Send forespørsel</button>
+                        <p id="booking-status" class="form-status" role="status" aria-live="polite"></p>
+                    </div>
+                    <p class="form-footnote" role="note">Forespørslene lagres lokalt i nettleseren din slik at du kan følge status senere. Styret tar kontakt for endelig avtale.</p>
                 </form>
+            </div>
+        </section>
+
+        <section class="page-section" aria-labelledby="reservation-overview-heading">
+            <div class="container">
+                <div class="section-heading">
+                    <h2 id="reservation-overview-heading">Kommende reservasjoner</h2>
+                    <p>Se hvilke datoer som allerede er holdt av gjennom Helgøens Vel.</p>
+                </div>
+                <div class="reservation-overview" aria-live="polite">
+                    <p id="reservation-empty" class="reservation-empty">Ingen reservasjoner er registrert enda. Når du sender en forespørsel, dukker den opp her og i kalenderen.</p>
+                    <ul id="reservation-list" class="reservation-list"></ul>
+                </div>
             </div>
         </section>
     </main>
@@ -103,7 +168,7 @@
     <footer class="site-footer">
         <div class="container footer-grid">
             <div>
-                <h2 class="footer-title">Bjørkvang Velforening</h2>
+                <h2 class="footer-title">Bjørkvang forsamlingslokale og Helgøens Vel</h2>
                 <p>Et inkluderende forsamlingshus på Helgøya som rommer møter, feiringer og fellesskap.</p>
             </div>
             <div>
@@ -124,7 +189,7 @@
                 </ul>
             </div>
         </div>
-        <p class="footer-meta">&copy; 2025 Bjørkvang Velforening – Sammen skaper vi gode øyeblikk.</p>
+        <p class="footer-meta">&copy; 2025 Bjørkvang forsamlingslokale og Helgøens Vel – Sammen skaper vi gode øyeblikk.</p>
     </footer>
 
     <script src="app.js"></script>
