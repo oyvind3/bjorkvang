@@ -54,6 +54,6 @@ jobs:
             --overwrite true \
             --source ./images
 
-    - name: Logout of Azure
+    - name: Logout of Azure cli
       if: always()
       run: az logout
