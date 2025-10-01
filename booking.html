@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking – Bjørkvang Velforening</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container nav-container">
+            <div class="branding">
+                <a class="logo" href="index.html">
+                    <span class="logo-mark" aria-hidden="true">BV</span>
+                    <span class="logo-text">
+                        <span class="logo-title">Bjørkvang Velforening</span>
+                        <span class="logo-subtitle">Samlingspunktet på Helgøya</span>
+                    </span>
+                </a>
+            </div>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+                <span class="sr-only">Åpne hovedmenyen</span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="site-nav" id="primary-nav" aria-label="Hovedmeny">
+                <ul>
+                    <li><a href="index.html">Hjem</a></li>
+                    <li><a href="booking.html" aria-current="page">Booking</a></li>
+                    <li><a href="produkter.html">Leie&nbsp;&amp;&nbsp;Priser</a></li>
+                    <li><a href="medlemskap.html">Medlemskap</a></li>
+                    <li><a href="regler.html">Regler</a></li>
+                    <li><a href="nyheter.html">Nyheter</a></li>
+                    <li><a href="kontakt.html">Kontakt</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-hero" aria-labelledby="booking-hero-title">
+        <div class="container hero-inner">
+            <div class="hero-content">
+                <span class="hero-eyebrow">Planlegg</span>
+                <h1 id="booking-hero-title">Book Bjørkvang til ditt neste arrangement</h1>
+                <p>Velg ledig dato i kalenderen og send oss en forespørsel. Vi bekrefter alle reservasjoner personlig slik at du får den hjelpen du trenger.</p>
+                <div class="hero-actions">
+                    <a class="button" href="#calendar">Se ledige datoer</a>
+                    <a class="button secondary" href="produkter.html">Sjekk priser</a>
+                </div>
+            </div>
+            <figure class="hero-media">
+                <img src="images/bjorkvang-sommer.png" alt="Opplyst forsamlingslokale klart til selskap">
+                <figcaption class="hero-caption">Kalenderen oppdateres fortløpende etter innsendte forespørsler.</figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <main class="page-main">
+        <section class="page-section">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>Reserver ønsket tidspunkt</h2>
+                    <p>Kalenderen viser hvilke datoer som allerede er holdt av. Forespørsler som legges inn her blir lagret i nettleseren din og synliggjort for andre besøkende.</p>
+                </div>
+                <div id="calendar" aria-live="polite"></div>
+            </div>
+        </section>
+
+        <section class="page-section" aria-labelledby="booking-form-heading">
+            <div class="container">
+                <div class="section-heading">
+                    <h2 id="booking-form-heading">Send inn bookingforespørsel</h2>
+                    <p>Fortell oss litt om arrangementet, så følger styret opp med bekreftelse og praktisk informasjon.</p>
+                </div>
+                <form id="booking-form">
+                    <label for="name">Navn</label>
+                    <input type="text" id="name" name="name" required>
+
+                    <label for="email">E-post</label>
+                    <input type="email" id="email" name="email" required>
+
+                    <label for="date">Dato</label>
+                    <input type="date" id="date" name="date" required>
+
+                    <label for="time">Starttid</label>
+                    <input type="time" id="time" name="time" required>
+
+                    <label for="duration">Varighet (timer)</label>
+                    <input type="number" id="duration" name="duration" min="1" max="12" value="4" required>
+
+                    <label for="message">Tilleggsinformasjon</label>
+                    <textarea id="message" name="message" rows="4" placeholder="Hva skal lokalet brukes til?"></textarea>
+
+                    <button class="button" type="submit">Send forespørsel</button>
+                    <p id="booking-status" class="form-status" role="status" aria-live="polite"></p>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <h2 class="footer-title">Bjørkvang Velforening</h2>
+                <p>Et inkluderende forsamlingshus på Helgøya som rommer møter, feiringer og fellesskap.</p>
+            </div>
+            <div>
+                <h2 class="footer-title">Snarveier</h2>
+                <ul class="footer-links">
+                    <li><a href="booking.html" aria-current="page">Booking</a></li>
+                    <li><a href="produkter.html">Leie &amp; priser</a></li>
+                    <li><a href="medlemskap.html">Medlemskap</a></li>
+                    <li><a href="regler.html">Regler</a></li>
+                </ul>
+            </div>
+            <div>
+                <h2 class="footer-title">Kontakt</h2>
+                <ul class="footer-contact">
+                    <li><a href="mailto:helgoens.vel@example.com">helgoens.vel@example.com</a></li>
+                    <li><a href="tel:+4748060273">+47&nbsp;480&nbsp;60&nbsp;273</a></li>
+                    <li>Helgøya, Ringsaker</li>
+                </ul>
+            </div>
+        </div>
+        <p class="footer-meta">&copy; 2025 Bjørkvang Velforening – Sammen skaper vi gode øyeblikk.</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="booking.js"></script>
+</body>
+</html>
