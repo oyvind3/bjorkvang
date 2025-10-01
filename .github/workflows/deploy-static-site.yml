@@ -1,3 +1,5 @@
+name: Deploy Static Website to Azure Storage
+
 on:
   push:
     branches:
@@ -25,7 +27,8 @@ jobs:
           az storage blob sync \
             --account-name finsrudfrukt \
             --source . \
-            --container-name '$web' \
+            --container '$web' \
+            --auth-mode login \
             --delete-destination true \
             --exclude-path ".github/*" "functions/*" \
             --exclude-pattern "*.md" "docker-compose.yml"
