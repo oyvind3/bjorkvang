@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const safeEnd = Number.isNaN(endDate.getTime()) ? new Date(startDate.getTime() + 4 * 60 * 60 * 1000) : endDate;
 
     const extended = { ...(event.extendedProps || {}) };
-    const name = (extended.name || event.title?.replace(/^Reservert[:–-]?\s*/i, '').trim() || 'Reservert').trim();
+    const name = (extended.name || '').trim();
     const eventType = extended.eventType || 'Reservasjon';
     const message = extended.message || '';
     const email = extended.email || '';
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
           : null;
 
     return {
-      title: `${eventType} – ${name}`,
+      title: eventType || 'Reservert',
       start: startDate.toISOString(),
       end: safeEnd.toISOString(),
       extendedProps: {
@@ -171,11 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const host = document.createElement('p');
       host.className = 'reservation-meta';
-      const contactParts = [event.extendedProps?.name || 'Ukjent'];
-      if (event.extendedProps?.phone) {
-        contactParts.push(event.extendedProps.phone);
-      }
-      host.textContent = `Ansvarlig: ${contactParts.join(' – ')}`;
+      host.textContent = 'Kontakt styret for detaljer om denne reservasjonen.';
       listItem.appendChild(host);
 
       const durationHours = event.extendedProps?.duration || Math.max(1, Math.round((endDate - startDate) / (60 * 60 * 1000)));
@@ -299,8 +295,8 @@ document.addEventListener('DOMContentLoaded', function () {
           : '';
         tooltip.innerHTML =
           `<strong>${info.event.extendedProps?.eventType || 'Reservasjon'}</strong><br>` +
-          `${info.event.extendedProps?.name || ''}${spaces}<br>` +
-          `${start ? start.toLocaleDateString('nb-NO') : ''} ${timeRange}`;
+          `${start ? start.toLocaleDateString('nb-NO') : ''} ${timeRange}` +
+          (spaces ? `<br>${spaces.replace(/^<br>/, '')}` : '');
 
         document.body.appendChild(tooltip);
         info.el.addEventListener('mousemove', function (e) {
@@ -383,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
         : null;
 
       const newEvent = {
-        title: `${eventType} – ${name}`,
+        title: eventType || 'Reservert',
         start: startDate.toISOString(),
         end: endDate.toISOString(),
         extendedProps: {
