@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking – Bjørkvang forsamlingslokale og Helgøens Vel</title>
+    <title>Leie lokalet – Bjørkvang forsamlingslokale og Helgøens Vel</title>
     <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
@@ -29,7 +29,7 @@
             <nav class="site-nav" id="primary-nav" aria-label="Hovedmeny">
                 <ul>
                     <li><a href="index.html">Hjem</a></li>
-                    <li><a href="booking.html" aria-current="page">Booking</a></li>
+                    <li><a href="booking.html" aria-current="page">Leie lokalet</a></li>
                     <li><a href="produkter.html">Leie&nbsp;&amp;&nbsp;Priser</a></li>
                     <li><a href="medlemskap.html">Medlemskap</a></li>
                     <li><a href="regler.html">Regler</a></li>
@@ -44,15 +44,15 @@
         <div class="container hero-inner">
             <div class="hero-content">
                 <span class="hero-eyebrow">Planlegg</span>
-                <h1 id="booking-hero-title">Reserver Bjørkvang forsamlingslokale</h1>
-                <p>Kalenderen under viser oppdatert status for Helgøens Vel sitt forsamlingshus. Velg ønsket dato, legg inn detaljene og få bekreftelse fra styret.</p>
+                <h1 id="booking-hero-title">Lei Bjørkvang forsamlingslokale</h1>
+                <p>Kalenderen viser oppdatert status for Helgøens Vel sitt forsamlingshus. Velg dato, fortell oss om arrangementet og få bekreftelse fra styret.</p>
                 <div class="hero-badges" role="list">
                     <span class="hero-badge" role="listitem">Tilgjengelighet i sanntid</span>
                     <span class="hero-badge" role="listitem">Personlig oppfølging</span>
                     <span class="hero-badge" role="listitem">Fleksible romløsninger</span>
                 </div>
                 <div class="hero-actions">
-                    <a class="button" href="#calendar">Se ledige datoer</a>
+                    <a class="button" href="#calendar">Finn ledige datoer</a>
                     <a class="button secondary" href="produkter.html">Sjekk priser</a>
                 </div>
             </div>
@@ -64,12 +64,50 @@
     </section>
 
     <main class="page-main">
+        <section class="page-section space-gallery-section" aria-labelledby="space-gallery-heading">
+            <div class="container">
+                <div class="section-heading">
+                    <h2 id="space-gallery-heading">Velg rommet som passer</h2>
+                    <p>Få et glimt av lokalene før du sender forespørselen. Alle rom kan kombineres for større arrangementer.</p>
+                </div>
+                <div class="space-gallery" role="list">
+                    <article class="space-card" role="listitem">
+                        <figure>
+                            <img src="images/67A6972D-DA19-4F40-B0AC-0C283E59D9F2.jpeg" alt="Selskapsoppsett i Bjørkvangs store sal">
+                            <figcaption>
+                                <h3>Salen</h3>
+                                <p>Romslig sal med scene, god takhøyde og plass til både langbord og dansegulv.</p>
+                            </figcaption>
+                        </figure>
+                    </article>
+                    <article class="space-card" role="listitem">
+                        <figure>
+                            <img src="images/981ED216-C4FB-45C8-8862-E7A537F76A9A.jpeg" alt="Peisestue med sofaer og varme toner">
+                            <figcaption>
+                                <h3>Peisestua</h3>
+                                <p>Intim stue med peis som passer til mindre selskap, møter og samlinger.</p>
+                            </figcaption>
+                        </figure>
+                    </article>
+                    <article class="space-card" role="listitem">
+                        <figure>
+                            <img src="images/76ee410e-035f-409f-bc0c-025141df694e.png" alt="Kjøkkenbenker og utstyr klart til servering">
+                            <figcaption>
+                                <h3>Kjøkken og servering</h3>
+                                <p>Fullt utstyrt kjøkken med dekketøy og serveringsløsninger for arrangementet ditt.</p>
+                            </figcaption>
+                        </figure>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section class="page-section">
             <div class="container booking-layout">
                 <div class="booking-main">
                     <div class="section-heading">
-                        <h2>Reserver ønsket tidspunkt</h2>
-                        <p>Kalenderen viser hvilke datoer som allerede er holdt av. Forespørsler som legges inn her blir lagret i nettleseren din og synliggjort for andre besøkende.</p>
+                        <h2>Hold av ønsket tidspunkt</h2>
+                        <p>Kalenderen viser hvilke datoer som allerede er holdt av. Forespørselen du legger inn lagres lokalt i nettleseren og vises for andre besøkende.</p>
                     </div>
                     <div id="calendar" aria-live="polite"></div>
                     <p class="calendar-note">Velg dato direkte i kalenderen for å fylle ut skjemaet raskere. Dobbeltbooking hindres automatisk.</p>
@@ -97,7 +135,7 @@
             <div class="container">
                 <div class="section-heading">
                     <h2 id="booking-form-heading">Send leieforespørsel</h2>
-                    <p>Fortell oss litt om arrangementet og hva du ønsker å leie. Forespørselen sendes til styret som følger opp med bekreftelse og digital kontrakt.</p>
+                    <p>Fortell oss om arrangementet og hva du ønsker å leie. Styret følger opp med bekreftelse og digital kontrakt.</p>
                 </div>
                 <form id="booking-form">
                     <div class="form-grid">
@@ -239,7 +277,7 @@
             <div>
                 <h2 class="footer-title">Snarveier</h2>
                 <ul class="footer-links">
-                    <li><a href="booking.html" aria-current="page">Booking</a></li>
+                    <li><a href="booking.html" aria-current="page">Leie lokalet</a></li>
                     <li><a href="produkter.html">Leie &amp; priser</a></li>
                     <li><a href="medlemskap.html">Medlemskap</a></li>
                     <li><a href="regler.html">Regler</a></li>
