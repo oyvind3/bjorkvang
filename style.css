@@ -299,6 +299,18 @@ button {
     box-shadow: 0 22px 44px rgba(24, 61, 44, 0.18);
 }
 
+.button.accent {
+    background: var(--accent-500);
+    color: var(--text-primary);
+    box-shadow: 0 16px 32px rgba(191, 127, 26, 0.28);
+}
+
+.button.accent:hover,
+.button.accent:focus {
+    background: var(--accent-400);
+    box-shadow: 0 22px 44px rgba(191, 127, 26, 0.3);
+}
+
 .button.secondary {
     background: rgba(37, 120, 90, 0.1);
     color: var(--brand-600);
@@ -334,6 +346,14 @@ button {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+}
+
+.eyebrow {
+    font-size: 0.85rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
 }
 
 /* Hero */
@@ -550,6 +570,43 @@ button {
     text-decoration: underline;
 }
 
+.membership-highlight {
+    background: linear-gradient(135deg, rgba(37, 120, 90, 0.08), rgba(242, 180, 65, 0.08));
+}
+
+.membership-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: clamp(1.8rem, 4vw, 2.6rem);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.membership-card__content {
+    max-width: 46ch;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.membership-card__content h2 {
+    margin: 0;
+}
+
+.membership-card__content p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.membership-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
 .callout {
     background: linear-gradient(120deg, rgba(37, 120, 90, 0.95), rgba(242, 180, 65, 0.85));
     color: #fff;
@@ -559,6 +616,56 @@ button {
     display: grid;
     gap: 1rem;
     text-align: center;
+}
+
+.space-gallery-section {
+    background: var(--surface-muted);
+}
+
+.space-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.space-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    display: grid;
+}
+
+.space-card figure {
+    margin: 0;
+    display: grid;
+    gap: 0;
+}
+
+.space-card img {
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: 4 / 3;
+}
+
+.space-card figcaption {
+    padding: 1.25rem 1.5rem 1.5rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.space-card h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--brand-600);
+}
+
+.space-card p {
+    margin: 0;
+    color: var(--text-secondary);
 }
 
 .products-grid {
@@ -1118,6 +1225,19 @@ button[type="submit"] {
 
     .feature-list li {
         align-items: flex-start;
+    }
+
+    .membership-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .membership-card__actions {
+        width: 100%;
+    }
+
+    .space-gallery {
+        grid-template-columns: 1fr;
     }
 
     form {
