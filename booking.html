@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leie lokalet – Bjørkvang forsamlingslokale og Helgøens Vel</title>
+    <title>Kalender & booking – Bjørkvang forsamlingslokale og Helgøens Vel</title>
     <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
@@ -29,8 +29,8 @@
             <nav class="site-nav" id="primary-nav" aria-label="Hovedmeny">
                 <ul>
                     <li><a href="index.html">Hjem</a></li>
-                    <li><a href="booking.html" aria-current="page">Leie lokalet</a></li>
-                    <li><a href="produkter.html">Leie&nbsp;&amp;&nbsp;Priser</a></li>
+                    <li><a href="booking.html" aria-current="page">Kalender & booking</a></li>
+                    <li><a href="produkter.html">Priser&nbsp;&amp;&nbsp;inventar</a></li>
                     <li><a href="medlemskap.html">Medlemskap</a></li>
                     <li><a href="regler.html">Regler</a></li>
                     <li><a href="nyheter.html">Nyheter</a></li>
@@ -183,10 +183,24 @@
                 </div>
                 <aside class="booking-aside" aria-labelledby="availability-heading">
                     <h3 id="availability-heading">Slik leser du kalenderen</h3>
+                    <div class="availability-legend" role="list">
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--available" aria-hidden="true"></span>
+                            <span>Grønn bakgrunn betyr ledig dato.</span>
+                        </div>
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--pending" aria-hidden="true"></span>
+                            <span>Gule felt viser forespørsler som venter på bekreftelse.</span>
+                        </div>
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--unavailable" aria-hidden="true"></span>
+                            <span>Rød markering betyr at datoen er reservert eller stengt.</span>
+                        </div>
+                    </div>
                     <ul class="availability-list">
-                        <li><strong>Lyse dager</strong> er ledige og kan reserveres.</li>
-                        <li><strong>Markeringsfelt</strong> viser tidspunkt for bekreftede forespørsler.</li>
+                        <li><strong>Marker en dato</strong> for å fylle ut skjemaet automatisk.</li>
                         <li>Du kan holde av inntil <strong>12 timer</strong> per reservasjon.</li>
+                        <li><strong>Trenger du lenger tid?</strong> Skriv det i meldingsfeltet så vurderer styret utvidelse.</li>
                     </ul>
                     <div class="contact-card">
                         <h4>Trenger du hjelp?</h4>
@@ -343,8 +357,8 @@
             <div>
                 <h2 class="footer-title">Snarveier</h2>
                 <ul class="footer-links">
-                    <li><a href="booking.html" aria-current="page">Leie lokalet</a></li>
-                    <li><a href="produkter.html">Leie &amp; priser</a></li>
+                    <li><a href="booking.html" aria-current="page">Kalender & booking</a></li>
+                    <li><a href="produkter.html">Priser &amp; inventar</a></li>
                     <li><a href="medlemskap.html">Medlemskap</a></li>
                     <li><a href="regler.html">Regler</a></li>
                 </ul>
