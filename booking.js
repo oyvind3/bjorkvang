@@ -15,6 +15,108 @@ document.addEventListener('DOMContentLoaded', function () {
   const phoneInput = document.getElementById('phone');
   const attendeesInput = document.getElementById('attendees');
 
+  const STATUS_VALUES = ['pending', 'confirmed', 'blocked'];
+
+  const normaliseStatus = (value, fallback = 'pending') => {
+    if (typeof value !== 'string') {
+      return fallback;
+    }
+    const trimmed = value.trim().toLowerCase();
+    return STATUS_VALUES.includes(trimmed) ? trimmed : fallback;
+  };
+
+  const statusLabels = {
+    pending: 'Venter bekreftelse',
+    confirmed: 'Bekreftet',
+    blocked: 'Ikke tilgjengelig'
+  };
+
+  const statusPriority = {
+    pending: 1,
+    confirmed: 2,
+    blocked: 3
+  };
+
+  const getStatusLabel = (status) => statusLabels[status] || statusLabels.pending;
+
+  const computeSuggestedStatus = (spaces, duration, existingStatus) => {
+    if (existingStatus && STATUS_VALUES.includes(existingStatus)) {
+      return existingStatus;
+    }
+    if (Array.isArray(spaces) && spaces.some((space) => space.toLowerCase() === 'hele lokalet')) {
+      return 'confirmed';
+    }
+    if (Number.isFinite(duration) && duration >= 8) {
+      return 'confirmed';
+    }
+    return 'pending';
+  };
+
+  const highlightDayCells = () => {
+    if (!calendarEl) {
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dayCells = calendarEl.querySelectorAll('.fc-daygrid-day');
+    dayCells.forEach((cell) => {
+      const dateStr = cell.getAttribute('data-date');
+      cell.classList.remove('is-available', 'is-pending', 'is-booked', 'is-blocked', 'is-past');
+      if (!dateStr) {
+        return;
+      }
+
+      const date = new Date(`${dateStr}T00:00:00`);
+      if (Number.isNaN(date.getTime())) {
+        return;
+      }
+
+      if (date < today) {
+        cell.classList.add('is-past');
+        return;
+      }
+
+      const dayStart = new Date(date);
+      const dayEnd = new Date(date);
+      dayStart.setHours(0, 0, 0, 0);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      let strongestStatus = null;
+      let strongestPriority = 0;
+
+      events.forEach((event) => {
+        const start = new Date(event.start);
+        const end = event.end ? new Date(event.end) : new Date(start.getTime() + (event.extendedProps?.duration || 1) * 60 * 60 * 1000);
+
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+          return;
+        }
+
+        if (start <= dayEnd && end >= dayStart) {
+          const status = normaliseStatus(event.extendedProps?.status, 'pending');
+          const priority = statusPriority[status] || 0;
+          if (priority > strongestPriority) {
+            strongestPriority = priority;
+            strongestStatus = status;
+          }
+        }
+      });
+
+      if (!strongestStatus) {
+        cell.classList.add('is-available');
+        return;
+      }
+
+      if (strongestStatus === 'pending') {
+        cell.classList.add('is-pending');
+      } else {
+        cell.classList.add('is-blocked');
+      }
+    });
+  };
+
   const showStatus = (message, type = 'success') => {
     if (!statusEl) {
       if (type === 'error') {
@@ -75,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
         : typeof extended.attendees === 'string' && extended.attendees.trim() !== ''
           ? Number.parseInt(extended.attendees, 10)
           : null;
+    const status = computeSuggestedStatus(spaces, duration, normaliseStatus(extended.status, ''));
 
     return {
       title: eventType || 'Reservert',
@@ -91,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         spaces,
         services,
         attendees: Number.isFinite(attendees) ? attendees : null,
+        status,
         createdAt: extended.createdAt || new Date().toISOString()
       }
     };
@@ -167,6 +271,12 @@ document.addEventListener('DOMContentLoaded', function () {
       timeEl.textContent = `${datePart} kl. ${timePart}`;
       header.appendChild(timeEl);
 
+      const status = normaliseStatus(event.extendedProps?.status, 'pending');
+      const statusBadge = document.createElement('span');
+      statusBadge.className = `reservation-status reservation-status--${status}`;
+      statusBadge.textContent = getStatusLabel(status);
+      header.appendChild(statusBadge);
+
       listItem.appendChild(header);
 
       const host = document.createElement('p');
@@ -232,6 +342,10 @@ document.addEventListener('DOMContentLoaded', function () {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
+      },
+      eventClassNames: function (arg) {
+        const status = normaliseStatus(arg.event.extendedProps?.status, 'pending');
+        return [`fc-event--${status}`];
       },
       dateClick: function (info) {
         if (dateInput) {
@@ -307,12 +421,24 @@ document.addEventListener('DOMContentLoaded', function () {
       eventMouseout: function () {
         const tooltip = document.getElementById('fc-tooltip');
         if (tooltip) tooltip.remove();
+      },
+      datesSet: function () {
+        requestAnimationFrame(() => {
+          highlightDayCells();
+        });
+      },
+      eventsSet: function () {
+        requestAnimationFrame(() => {
+          highlightDayCells();
+        });
       }
     });
     calendar.render();
+    highlightDayCells();
   }
 
   updateReservationList();
+  highlightDayCells();
 
   if (form) {
     form.addEventListener('submit', function (e) {
@@ -378,6 +504,8 @@ document.addEventListener('DOMContentLoaded', function () {
         ? Number.parseInt(attendees, 10)
         : null;
 
+      const status = computeSuggestedStatus(selectedSpaces, duration, '');
+
       const newEvent = {
         title: eventType || 'Reservert',
         start: startDate.toISOString(),
@@ -392,6 +520,7 @@ document.addEventListener('DOMContentLoaded', function () {
           spaces: selectedSpaces,
           services: selectedServices,
           attendees: attendeeCount,
+          status,
           createdAt: new Date().toISOString()
         }
       };
@@ -408,9 +537,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (calendar) {
         calendar.addEvent(newEvent);
+        highlightDayCells();
       }
 
       updateReservationList();
+      highlightDayCells();
 
       form.reset();
       if (durationInputEl) {

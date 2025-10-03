@@ -847,6 +847,38 @@ button {
     margin: 0;
 }
 
+.availability-legend {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0.25rem 0 0.75rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-secondary);
+}
+
+.legend-dot {
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(31, 45, 42, 0.05);
+}
+
+.legend-dot--available {
+    background: rgba(47, 143, 106, 0.55);
+}
+
+.legend-dot--pending {
+    background: rgba(247, 198, 106, 0.8);
+}
+
+.legend-dot--unavailable {
+    background: rgba(213, 93, 93, 0.75);
+}
+
 .availability-list {
     margin: 0;
     padding: 0;
@@ -854,23 +886,6 @@ button {
     display: grid;
     gap: 0.75rem;
     color: var(--text-secondary);
-}
-
-.availability-list li {
-    position: relative;
-    padding-left: 1.5rem;
-}
-
-.availability-list li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.4rem;
-    width: 0.7rem;
-    height: 0.7rem;
-    border-radius: 50%;
-    background: var(--accent-500);
-    box-shadow: 0 0 0 3px rgba(242, 180, 65, 0.2);
 }
 
 .availability-list strong {
@@ -907,6 +922,40 @@ button {
     box-shadow: var(--shadow-card);
 }
 
+#calendar .fc-daygrid-day {
+    position: relative;
+    overflow: hidden;
+}
+
+#calendar .fc-daygrid-day::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: calc(var(--radius-sm) * 1.6);
+    background: transparent;
+    transition: background var(--transition), box-shadow var(--transition);
+    pointer-events: none;
+}
+
+#calendar .fc-daygrid-day.is-available::before {
+    background: rgba(47, 143, 106, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(47, 143, 106, 0.25);
+}
+
+#calendar .fc-daygrid-day.is-pending::before {
+    background: rgba(247, 198, 106, 0.25);
+    box-shadow: inset 0 0 0 1px rgba(242, 180, 65, 0.3);
+}
+
+#calendar .fc-daygrid-day.is-blocked::before {
+    background: rgba(213, 93, 93, 0.22);
+    box-shadow: inset 0 0 0 1px rgba(182, 73, 73, 0.35);
+}
+
+#calendar .fc-daygrid-day.is-past::before {
+    background: rgba(101, 115, 111, 0.12);
+}
+
 #calendar .fc-toolbar-title {
     font-family: 'Playfair Display', Georgia, serif;
     color: var(--brand-600);
@@ -921,6 +970,27 @@ button {
 #calendar .fc-daygrid-day-number,
 #calendar .fc-col-header-cell-cushion {
     color: var(--text-primary);
+}
+
+#calendar .fc-event {
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0.2rem 0.45rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+#calendar .fc-event.fc-event--pending {
+    background: rgba(247, 198, 106, 0.95);
+    color: var(--text-primary);
+}
+
+#calendar .fc-event.fc-event--confirmed {
+    background: var(--brand-500);
+}
+
+#calendar .fc-event.fc-event--blocked {
+    background: #c96868;
 }
 
 form {
@@ -1123,6 +1193,33 @@ button[type="submit"] {
     color: var(--brand-600);
     font-weight: 600;
     font-size: 0.85rem;
+}
+
+.reservation-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background: var(--surface);
+    box-shadow: inset 0 0 0 1px rgba(31, 45, 42, 0.12);
+}
+
+.reservation-status--pending {
+    background: rgba(247, 198, 106, 0.35);
+    color: var(--text-primary);
+}
+
+.reservation-status--confirmed {
+    background: rgba(47, 143, 106, 0.25);
+    color: var(--brand-600);
+}
+
+.reservation-status--blocked {
+    background: rgba(213, 93, 93, 0.28);
+    color: #9a2e2e;
 }
 
 .reservation-time {
