@@ -30,7 +30,7 @@
                 <ul>
                     <li><a href="index.html">Hjem</a></li>
                     <li><a href="booking.html" aria-current="page">Leie lokalet</a></li>
-                    <li><a href="produkter.html">Leie&nbsp;&amp;&nbsp;Priser</a></li>
+                    <li><a href="produkter.html">Priser</a></li>
                     <li><a href="medlemskap.html">Medlemskap</a></li>
                     <li><a href="regler.html">Regler</a></li>
                     <li><a href="nyheter.html">Nyheter</a></li>
@@ -43,7 +43,7 @@
     <section class="page-hero" aria-labelledby="booking-hero-title">
         <div class="container hero-inner">
             <div class="hero-content">
-                <span class="hero-eyebrow">Planlegg</span>
+                <span class="hero-eyebrow">Leie lokalet</span>
                 <h1 id="booking-hero-title">Lei Bjørkvang forsamlingslokale</h1>
                 <p>Kalenderen viser oppdatert status for Helgøens Vel sitt forsamlingshus. Velg dato, fortell oss om arrangementet og få bekreftelse fra styret.</p>
                 <div class="hero-badges" role="list">
@@ -52,8 +52,8 @@
                     <span class="hero-badge" role="listitem">Fleksible romløsninger</span>
                 </div>
                 <div class="hero-actions">
-                    <a class="button" href="#calendar">Finn ledige datoer</a>
-                    <a class="button secondary" href="produkter.html">Sjekk priser</a>
+                    <a class="button" href="#calendar">Finn ledig dato</a>
+                    <a class="button secondary" href="produkter.html">Se priser</a>
                 </div>
             </div>
             <figure class="hero-media">
@@ -135,8 +135,8 @@
         <section class="page-section" aria-labelledby="inventory-heading">
             <div class="container">
                 <div class="section-heading">
-                    <h2 id="inventory-heading">Inventar og utstyr</h2>
-                    <p>Her legger vi inn detaljene om hva som følger med ved leie. Bruk listen under til å fylle ut kjøkkenutstyr, bord og stoler og annet inventar.</p>
+                    <h2 id="inventory-heading">Praktisk oversikt</h2>
+                    <p>Bruk denne oversikten til å beskrive hva som følger med i leien – fra kjøkkenutstyr til bordoppsett og teknikk.</p>
                 </div>
                 <div class="inventory-grid">
                     <article class="inventory-card">
@@ -183,10 +183,24 @@
                 </div>
                 <aside class="booking-aside" aria-labelledby="availability-heading">
                     <h3 id="availability-heading">Slik leser du kalenderen</h3>
+                    <div class="availability-legend" role="list">
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--available" aria-hidden="true"></span>
+                            <span>Grønn bakgrunn betyr ledig dato.</span>
+                        </div>
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--pending" aria-hidden="true"></span>
+                            <span>Gule felt viser forespørsler som venter på bekreftelse.</span>
+                        </div>
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--unavailable" aria-hidden="true"></span>
+                            <span>Rød markering betyr at datoen er reservert eller stengt.</span>
+                        </div>
+                    </div>
                     <ul class="availability-list">
-                        <li><strong>Lyse dager</strong> er ledige og kan reserveres.</li>
-                        <li><strong>Markeringsfelt</strong> viser tidspunkt for bekreftede forespørsler.</li>
+                        <li><strong>Marker en dato</strong> for å fylle ut skjemaet automatisk.</li>
                         <li>Du kan holde av inntil <strong>12 timer</strong> per reservasjon.</li>
+                        <li><strong>Trenger du lenger tid?</strong> Skriv det i meldingsfeltet så vurderer styret utvidelse.</li>
                     </ul>
                     <div class="contact-card">
                         <h4>Trenger du hjelp?</h4>
@@ -344,7 +358,7 @@
                 <h2 class="footer-title">Snarveier</h2>
                 <ul class="footer-links">
                     <li><a href="booking.html" aria-current="page">Leie lokalet</a></li>
-                    <li><a href="produkter.html">Leie &amp; priser</a></li>
+                    <li><a href="produkter.html">Priser</a></li>
                     <li><a href="medlemskap.html">Medlemskap</a></li>
                     <li><a href="regler.html">Regler</a></li>
                 </ul>
