@@ -432,6 +432,8 @@ button {
 .hero-media {
     justify-self: center;
     position: relative;
+    width: min(100%, 520px);
+    margin-inline: auto;
 }
 
 .hero-media::before {
@@ -1378,6 +1380,7 @@ button[type="submit"] {
 @media (max-width: 768px) {
     .hero-inner {
         grid-template-columns: 1fr;
+        gap: 2.5rem;
     }
 
     .hero-media {
@@ -1441,6 +1444,33 @@ button[type="submit"] {
         padding: 0.25rem;
     }
 
+    .hero-inner {
+        gap: 2.25rem;
+    }
+
+    .hero-content {
+        max-width: 40ch;
+        margin-inline: auto;
+    }
+
+    .hero-content p {
+        font-size: 1.02rem;
+    }
+
+    .hero-media {
+        max-width: min(340px, 90vw);
+    }
+
+    .hero-media::before {
+        inset: -8% -2% 18% -2%;
+        filter: blur(26px);
+    }
+
+    .hero-caption {
+        margin-inline: auto;
+        max-width: 32ch;
+    }
+
     .hero-actions,
     .action-row,
     .button-group {
@@ -1455,6 +1485,15 @@ button[type="submit"] {
     .button-group .button.ghost,
     .membership-card__actions .button {
         width: 100%;
+    }
+
+    .info-grid,
+    .inventory-grid,
+    .products-grid,
+    .space-gallery,
+    .safety-overview,
+    .agreement-grid {
+        gap: 1.25rem;
     }
 
     .membership-card {
@@ -1496,6 +1535,102 @@ button[type="submit"] {
     .footer-links,
     .footer-contact {
         align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        line-height: 1.7;
+    }
+
+    .container {
+        width: min(1120px, calc(100vw - 1.9rem));
+    }
+
+    .nav-container {
+        padding: 0.6rem 0;
+        gap: 0.5rem;
+    }
+
+    .logo {
+        gap: 0.6rem;
+    }
+
+    .logo-mark {
+        width: 36px;
+        height: 36px;
+        font-size: 1.05rem;
+    }
+
+    .logo-title {
+        font-size: 1.2rem;
+    }
+
+    .logo-subtitle {
+        font-size: 0.8rem;
+    }
+
+    .page-section {
+        padding: 1.8rem 0;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(1.6rem, 8vw, 2.1rem);
+    }
+
+    .hero-content h1,
+    .hero-content h2 {
+        font-size: clamp(1.8rem, 8vw, 2.4rem);
+    }
+
+    .hero-content p {
+        font-size: 1rem;
+    }
+
+    .hero-actions,
+    .action-row,
+    .button-group {
+        gap: 0.6rem;
+    }
+
+    .feature-list {
+        gap: 0.85rem;
+    }
+
+    .feature-list li {
+        padding: 1rem 1.05rem;
+        font-size: 0.98rem;
+    }
+
+    .site-nav {
+        margin: 0 0.5rem;
+    }
+
+    .site-nav ul {
+        padding: 0.4rem;
+    }
+
+    .info-card,
+    .inventory-card,
+    .product-card,
+    .vipps-callout,
+    .booking-aside,
+    .process-callout,
+    .safety-card,
+    .agreement-grid article,
+    .reservation-overview,
+    .reservation-item,
+    .callout,
+    .membership-card {
+        padding: 1.25rem 1.35rem;
+    }
+
+    #calendar {
+        padding: 1.1rem;
+    }
+
+    .footer-grid {
+        gap: 2rem;
     }
 }
 
