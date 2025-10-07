@@ -1,11 +1,46 @@
 const { app } = require('@azure/functions');
-const { fetch } = require('undici');
+
+let nodemailer = null;
+let nodemailerLoadError = null;
+try {
+    nodemailer = require('nodemailer');
+} catch (error) {
+    nodemailerLoadError = error;
+}
+
+let plunkTransportFactory = null;
+let plunkTransportLoadError = null;
+try {
+    const plunkTransportModule = require('@plunk/nodemailer');
+    if (typeof plunkTransportModule === 'function') {
+        plunkTransportFactory = plunkTransportModule;
+    } else if (plunkTransportModule && typeof plunkTransportModule.default === 'function') {
+        plunkTransportFactory = plunkTransportModule.default;
+    } else if (plunkTransportModule && typeof plunkTransportModule.PlunkTransport === 'function') {
+        plunkTransportFactory = plunkTransportModule.PlunkTransport;
+    } else if (plunkTransportModule && typeof plunkTransportModule.Plunk === 'function') {
+        plunkTransportFactory = plunkTransportModule.Plunk;
+    }
+
+    if (typeof plunkTransportFactory !== 'function') {
+        plunkTransportLoadError = new Error('Fant ikke en gyldig transportfabrikk i @plunk/nodemailer.');
+        plunkTransportFactory = null;
+    }
+} catch (error) {
+    plunkTransportLoadError = error;
+}
 
 const PLUNK_API_TOKEN = process.env.PLUNK_API_TOKEN;
-const PLUNK_FORM_ID = process.env.PLUNK_FORM_ID;
 const PLUNK_DEFAULT_EVENT = process.env.PLUNK_DEFAULT_EVENT || 'bjorkvang-signup';
-const PLUNK_API_BASE_URL = (process.env.PLUNK_API_BASE_URL || 'https://api.useplunk.com/v1').replace(/\/?$/, '');
 const PLUNK_ALLOW_ORIGIN = process.env.PLUNK_ALLOW_ORIGIN || '*';
+
+let cachedTransporter = null;
+
+const createError = (code, message) => {
+    const error = new Error(message);
+    error.code = code;
+    return error;
+};
 
 const parseUrlEncoded = (text) => {
     const params = new URLSearchParams(text);
@@ -154,6 +189,157 @@ const getQueryValues = (query, key) => {
     return query.getAll(key);
 };
 
+const uniqueList = (values) => {
+    if (!Array.isArray(values)) {
+        return [];
+    }
+
+    return [...new Set(values.filter((value) => typeof value === 'string' && value.trim().length > 0))];
+};
+
+const getRecipients = () => {
+    const combined = [
+        ...normaliseList(process.env.PLUNK_BOOKING_TO),
+        ...normaliseList(process.env.PLUNK_TO_EMAILS),
+        ...normaliseList(process.env.BOOKING_NOTIFICATION_RECIPIENTS),
+    ];
+
+    return uniqueList(combined);
+};
+
+const getCcRecipients = () =>
+    uniqueList([
+        ...normaliseList(process.env.PLUNK_BOOKING_CC),
+        ...normaliseList(process.env.PLUNK_CC_EMAILS),
+    ]);
+
+const getBccRecipients = () =>
+    uniqueList([
+        ...normaliseList(process.env.PLUNK_BOOKING_BCC),
+        ...normaliseList(process.env.PLUNK_BCC_EMAILS),
+    ]);
+
+const getFromAddress = () =>
+    pickString(process.env.PLUNK_BOOKING_FROM, process.env.PLUNK_FROM_EMAIL, process.env.BOOKING_FROM_EMAIL);
+
+const getReplyToAddress = (details) =>
+    pickString(process.env.PLUNK_BOOKING_REPLY_TO, process.env.PLUNK_REPLY_TO_EMAIL, details?.email);
+
+const escapeHtml = (value) =>
+    String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+const stringifyValue = (value, fallback = 'Ikke oppgitt') => {
+    if (Array.isArray(value)) {
+        const filtered = value
+            .map((entry) => (typeof entry === 'string' ? entry.trim() : String(entry)))
+            .filter((entry) => entry.length > 0);
+        return filtered.length > 0 ? filtered.join(', ') : fallback;
+    }
+
+    if (typeof value === 'boolean') {
+        return value ? 'Ja' : 'Nei';
+    }
+
+    if (value === undefined || value === null) {
+        return fallback;
+    }
+
+    const stringValue = String(value).trim();
+    return stringValue.length > 0 ? stringValue : fallback;
+};
+
+const toTextValue = (value, fallback) => stringifyValue(value, fallback);
+
+const toHtmlValue = (value, fallback, { preserveLineBreaks = false } = {}) => {
+    const textValue = stringifyValue(value, fallback);
+    const escaped = escapeHtml(textValue);
+    return preserveLineBreaks ? escaped.replace(/\n/g, '<br>') : escaped;
+};
+
+const buildEmailContent = (details) => {
+    const fullName = details.name || [details.firstName, details.lastName].filter(Boolean).join(' ');
+
+    const infoRows = [
+        { label: 'Navn', value: fullName },
+        { label: 'E-post', value: details.email },
+        { label: 'Telefon', value: details.phone },
+        { label: 'Selskap eller organisasjon', value: details.company },
+        { label: 'Arrangementstype', value: details.eventType || details.eventName },
+        { label: 'Dato', value: details.preferredDate },
+        { label: 'Starttid', value: details.preferredTime },
+        {
+            label: 'Varighet (timer)',
+            value: Number.isFinite(details.durationHours) ? details.durationHours : details.durationRaw,
+        },
+        { label: 'Ønskede rom', value: details.spaces, fallback: 'Ingen' },
+        { label: 'Tilleggsbehov', value: details.services, fallback: 'Ingen' },
+        {
+            label: 'Antall deltakere',
+            value: Number.isFinite(details.attendeeCount) ? details.attendeeCount : details.attendeesRaw,
+        },
+        { label: 'Etiketter', value: details.tags, fallback: 'Ingen' },
+        {
+            label: 'Markedsføringssamtykke',
+            value: typeof details.consent === 'boolean' ? details.consent : null,
+        },
+        {
+            label: 'Tilleggsinformasjon',
+            value: details.message,
+            fallback: 'Ingen opplysninger',
+            preserveLineBreaks: true,
+        },
+        { label: 'Metadata – kilde', value: details.metadata?.source },
+        { label: 'Metadata – side', value: details.metadata?.page },
+    ];
+
+    const subjectParts = ['Ny bookingforespørsel'];
+    if (details.eventType) {
+        subjectParts.push(details.eventType);
+    } else if (details.eventName) {
+        subjectParts.push(details.eventName);
+    }
+
+    const schedule = [details.preferredDate, details.preferredTime].filter(Boolean).join(' ');
+    if (schedule) {
+        subjectParts.push(schedule);
+    }
+
+    const subject = subjectParts.join(' – ');
+
+    const textBody = [
+        'En ny bookingforespørsel har blitt sendt inn via bjorkvang.no.',
+        '',
+        ...infoRows.map((row) => `${row.label}: ${toTextValue(row.value, row.fallback ?? 'Ikke oppgitt')}`),
+        '',
+        'Denne meldingen ble sendt automatisk fra booking-skjemaet på bjorkvang.no.',
+    ].join('\n');
+
+    const htmlBody = `
+        <div style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.5; color: #183d2c;">
+            <p>En ny bookingforespørsel har blitt sendt inn via bjorkvang.no.</p>
+            <dl style="margin: 0; padding: 0;">
+                ${infoRows
+                    .map(
+                        (row) => `
+                            <dt style="font-weight: 600; margin-top: 12px;">${escapeHtml(row.label)}</dt>
+                            <dd style="margin: 0;">${toHtmlValue(row.value, row.fallback ?? 'Ikke oppgitt', {
+                            preserveLineBreaks: Boolean(row.preserveLineBreaks),
+                        })}</dd>
+                        `
+                    )
+                    .join('')}
+            </dl>
+            <p style="margin-top: 16px;">Denne meldingen ble sendt automatisk fra booking-skjemaet på bjorkvang.no.</p>
+        </div>
+    `;
+
+    return {
+        subject,
+        text: textBody,
+        html: htmlBody,
+    };
+};
+
 const buildCorsHeaders = () => ({
     'Access-Control-Allow-Origin': PLUNK_ALLOW_ORIGIN,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -170,27 +356,91 @@ const jsonResponse = (status, body = {}) => ({
     jsonBody: body,
 });
 
-const submitToPlunk = async (payload, context) => {
-    if (!PLUNK_API_TOKEN || !PLUNK_FORM_ID) {
-        context.log('Plunk-konfigurasjon mangler');
-        throw new Error('PLUNK_CONFIGURATION_MISSING');
+const getTransporter = (context) => {
+    if (cachedTransporter) {
+        return cachedTransporter;
     }
 
-    const endpoint = `${PLUNK_API_BASE_URL}/forms/${encodeURIComponent(PLUNK_FORM_ID)}/submit`;
+    if (!nodemailer) {
+        context.log('nodemailer-modulen kunne ikke lastes', nodemailerLoadError);
+        throw createError('PLUNK_TRANSPORT_NOT_AVAILABLE', 'E-posttransporten er ikke tilgjengelig.');
+    }
 
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${PLUNK_API_TOKEN}`,
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-    });
+    if (!plunkTransportFactory) {
+        context.log('Kunne ikke laste @plunk/nodemailer-modulen', plunkTransportLoadError);
+        throw createError('PLUNK_TRANSPORT_NOT_AVAILABLE', 'Plunk nodemailer-transporten er ikke tilgjengelig.');
+    }
 
-    if (!response.ok) {
-        const errorBody = await response.text();
-        context.log('Plunk-forespørsel feilet', response.status, errorBody);
-        throw new Error(`PLUNK_REQUEST_FAILED_${response.status}`);
+    try {
+        cachedTransporter = nodemailer.createTransport(
+            plunkTransportFactory({
+                token: PLUNK_API_TOKEN,
+                apiKey: PLUNK_API_TOKEN,
+            })
+        );
+    } catch (error) {
+        context.log('Kunne ikke initialisere Plunk-transporter', error);
+        throw createError('PLUNK_TRANSPORT_NOT_AVAILABLE', 'Kunne ikke initialisere e-posttransporten.');
+    }
+
+    return cachedTransporter;
+};
+
+const sendBookingEmail = async (details, context) => {
+    if (!PLUNK_API_TOKEN) {
+        context.log('Plunk API-token mangler');
+        throw createError('PLUNK_CONFIGURATION_MISSING', 'Plunk API-token mangler.');
+    }
+
+    const fromAddress = getFromAddress();
+    if (!fromAddress) {
+        context.log('Ingen avsenderadresse er konfigurert for bookingmeldinger');
+        throw createError('PLUNK_SENDER_MISSING', 'Avsenderadresse mangler.');
+    }
+
+    const recipients = getRecipients();
+    if (recipients.length === 0) {
+        context.log('Ingen mottakere er konfigurert for bookingmeldinger');
+        throw createError('PLUNK_RECIPIENTS_MISSING', 'Mottakeradresse mangler.');
+    }
+
+    let transporter;
+    try {
+        transporter = getTransporter(context);
+    } catch (error) {
+        throw error;
+    }
+
+    const { subject, text, html } = buildEmailContent(details);
+
+    const mailOptions = {
+        from: fromAddress,
+        to: recipients.join(', '),
+        subject,
+        text,
+        html,
+    };
+
+    const replyTo = getReplyToAddress(details);
+    if (replyTo) {
+        mailOptions.replyTo = replyTo;
+    }
+
+    const ccRecipients = getCcRecipients();
+    if (ccRecipients.length > 0) {
+        mailOptions.cc = ccRecipients.join(', ');
+    }
+
+    const bccRecipients = getBccRecipients();
+    if (bccRecipients.length > 0) {
+        mailOptions.bcc = bccRecipients.join(', ');
+    }
+
+    try {
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        context.log('Klarte ikke å sende e-post via Plunk', error);
+        throw createError('PLUNK_SEND_FAILED', 'Klarte ikke å sende e-post via Plunk.');
     }
 };
 
@@ -222,58 +472,113 @@ app.http('plunkHttpTrigger', {
         }
 
         const query = request.query;
-        const email = pickString(body.email, body.emailAddress, getQueryValue(query, 'email'));
 
+        const email = pickString(body.email, body.emailAddress, getQueryValue(query, 'email'));
         if (!email) {
             return jsonResponse(400, { error: 'E-postadresse er påkrevd.' });
         }
 
-        const eventName = pickString(
-            body.eventName,
-            body.event,
-            getQueryValue(query, 'event'),
-            PLUNK_DEFAULT_EVENT
+        const firstName = pickString(body.firstName, body.firstname, body.fornavn, getQueryValue(query, 'firstName'));
+        const lastName = pickString(body.lastName, body.lastname, body.etternavn, getQueryValue(query, 'lastName'));
+        const name = pickString(
+            body.name,
+            [firstName, lastName].filter(Boolean).join(' '),
+            getQueryValue(query, 'name')
         );
 
-        const tags = normaliseList(body.tags ?? body.tag ?? getQueryValues(query, 'tag'));
+        const phone = pickString(body.phone, body.phoneNumber, body.telefon, getQueryValue(query, 'phone'));
+        const company = pickString(body.company, body.organisation, body.organization, getQueryValue(query, 'company'));
+
+        const eventType = pickString(
+            body.eventType,
+            body.event_type,
+            body.arrangement,
+            getQueryValue(query, 'eventType')
+        );
+        const eventName = pickString(body.eventName, body.event, getQueryValue(query, 'event'), PLUNK_DEFAULT_EVENT);
+
+        const preferredDate = pickString(body.date, body.preferredDate, getQueryValue(query, 'date'));
+        const preferredTime = pickString(body.time, body.preferredTime, getQueryValue(query, 'time'));
+
+        const durationRaw = pickString(body.duration, body.durationHours, body.hours, getQueryValue(query, 'duration'));
+        const parsedDuration = Number.parseFloat(durationRaw);
+        const durationHours = Number.isFinite(parsedDuration) ? parsedDuration : null;
+
+        const spaces = normaliseList([
+            body.spaces,
+            body.space,
+            getQueryValues(query, 'spaces'),
+            getQueryValues(query, 'space'),
+        ]);
+
+        const services = normaliseList([
+            body.services,
+            body.service,
+            getQueryValues(query, 'services'),
+            getQueryValues(query, 'service'),
+        ]);
+
+        const attendeesRaw = pickString(
+            body.attendees,
+            body.attendeeCount,
+            body.participants,
+            getQueryValue(query, 'attendees')
+        );
+        const parsedAttendees = Number.parseInt(attendeesRaw, 10);
+        const attendeeCount = Number.isFinite(parsedAttendees) ? parsedAttendees : null;
+
+        const message = pickString(body.message, body.notes, getQueryValue(query, 'message'));
+
+        const tags = normaliseList([body.tags, body.tag, getQueryValues(query, 'tag')]);
         const consent = parseBoolean(body.consent, body.marketingConsent, getQueryValue(query, 'consent'));
 
-        const fields = cleanObject({
-            firstName: pickString(body.firstName, body.firstname, body.fornavn, getQueryValue(query, 'firstName')),
-            lastName: pickString(body.lastName, body.lastname, body.etternavn, getQueryValue(query, 'lastName')),
-            phone: pickString(body.phone, body.phoneNumber, getQueryValue(query, 'phone')),
-            company: pickString(body.company, body.organisation, getQueryValue(query, 'company')),
-            message: pickString(body.message, body.notes, getQueryValue(query, 'message')),
-            preferredDate: pickString(body.date, body.preferredDate, getQueryValue(query, 'date')),
-            preferredTime: pickString(body.time, body.preferredTime, getQueryValue(query, 'time')),
+        const metadata = cleanObject({
+            source: pickString(body.source, body.origin, request.headers.get('origin')),
+            page: pickString(body.page, body.pageUrl, request.headers.get('referer')),
         });
 
-        if (consent !== null) {
-            fields.marketingConsent = consent;
-        }
-
-        const payload = cleanObject({
+        const bookingDetails = {
             email,
-            event: eventName,
-            fields: Object.keys(fields).length > 0 ? fields : undefined,
-            tags: tags.length > 0 ? tags : undefined,
-            metadata: cleanObject({
-                source: pickString(body.source, body.origin, request.headers.get('origin')),
-                page: pickString(body.page, body.pageUrl, request.headers.get('referer')),
-            }),
-        });
+            name,
+            firstName,
+            lastName,
+            phone,
+            company,
+            eventType,
+            eventName,
+            preferredDate,
+            preferredTime,
+            durationHours,
+            durationRaw,
+            spaces,
+            services,
+            attendeeCount,
+            attendeesRaw,
+            message,
+            tags,
+            consent,
+            metadata,
+        };
 
         try {
-            await submitToPlunk(payload, context);
+            await sendBookingEmail(bookingDetails, context);
         } catch (error) {
-            if (error.message === 'PLUNK_CONFIGURATION_MISSING') {
+            if (
+                error.code === 'PLUNK_CONFIGURATION_MISSING' ||
+                error.code === 'PLUNK_SENDER_MISSING' ||
+                error.code === 'PLUNK_RECIPIENTS_MISSING'
+            ) {
                 return jsonResponse(500, { error: 'Plunk-integrasjonen er ikke konfigurert.' });
             }
 
+            if (error.code === 'PLUNK_TRANSPORT_NOT_AVAILABLE') {
+                return jsonResponse(500, { error: 'E-posttransporten er ikke tilgjengelig.' });
+            }
+
             context.log('Plunk-integrasjonen returnerte feil', error);
-            return jsonResponse(502, { error: 'Klarte ikke å sende data til Plunk.' });
+            return jsonResponse(502, { error: 'Klarte ikke å sende e-post via Plunk.' });
         }
 
-        return jsonResponse(202, { message: 'Data ble sendt til Plunk.' });
+        return jsonResponse(202, { message: 'Bookingforespørselen ble sendt via Plunk.' });
     },
 });

@@ -8,7 +8,9 @@
   },
   "dependencies": {
     "@azure/functions": "^4.0.0",
-    "undici": "^5.29.0"
+    "undici": "^5.29.0",
+    "@plunk/nodemailer": "*",
+    "nodemailer": "^6.9.0"
   },
   "devDependencies": {},
   "main": "src/{index.js,functions/*.js}"
