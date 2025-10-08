@@ -693,7 +693,7 @@ button {
     aspect-ratio: 4 / 3;
 }
 
-.space-card figcaption {
+.space-card__body {
     padding: 1.25rem 1.5rem 1.5rem;
     display: grid;
     gap: 0.5rem;
