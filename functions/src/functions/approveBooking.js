@@ -1,7 +1,7 @@
 const { app } = require('@azure/functions');
-const { sendEmail } = require('./email');
-const { createHtmlResponse, createJsonResponse } = require('./http');
-const { getBooking, updateBookingStatus } = require('./bookingStore');
+const { sendEmail } = require('../shared/email');
+const { createHtmlResponse, createJsonResponse } = require('../shared/http');
+const { getBooking, updateBookingStatus } = require('../shared/bookingStore');
 
 /**
  * Approve a booking via a direct link.
