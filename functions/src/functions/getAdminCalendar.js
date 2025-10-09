@@ -1,6 +1,6 @@
 const { app } = require('@azure/functions');
-const { createJsonResponse } = require('./shared/http');
-const { listBookings } = require('./shared/bookingStore');
+const { createJsonResponse } = require('../shared/http');
+const { listBookings } = require('../shared/bookingStore');
 
 /**
  * Admin calendar endpoint with full requester visibility.
