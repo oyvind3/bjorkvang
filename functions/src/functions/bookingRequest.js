@@ -1,7 +1,7 @@
 const { app } = require('@azure/functions');
-const { sendEmail } = require('./email');
-const { createJsonResponse, parseBody, resolveBaseUrl } = require('./http');
-const { createBooking } = require('./bookingStore');
+const { sendEmail } = require('../shared/email');
+const { createJsonResponse, parseBody, resolveBaseUrl } = require('../shared/http');
+const { createBooking } = require('../shared/bookingStore');
 
 /**
  * Handle incoming booking submissions from the public website.
