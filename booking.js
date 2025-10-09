@@ -15,7 +15,164 @@ document.addEventListener('DOMContentLoaded', function () {
   const phoneInput = document.getElementById('phone');
   const attendeesInput = document.getElementById('attendees');
 
+  const BOOKING_EMAIL_ENDPOINT =
+    'https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/emailhttptriggerbooking';
+
   const STATUS_VALUES = ['pending', 'confirmed', 'blocked'];
+
+  const escapeHtml = (value) => {
+    if (typeof value !== 'string') {
+      return '';
+    }
+
+    const htmlEscapes = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+
+    return value.replace(/[&<>"']/g, (match) => htmlEscapes[match] || match);
+  };
+
+  const sendBookingEmail = async (payload) => {
+    if (!BOOKING_EMAIL_ENDPOINT) {
+      throw new Error('Mangler endepunkt for booking-e-post.');
+    }
+
+    const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      let message = 'Kunne ikke sende bookingforespørselen.';
+      try {
+        const data = await response.json();
+        if (data?.error) {
+          message = data.error;
+        }
+      } catch (_) {
+        // Ignorer JSON-feil og bruk standard melding
+      }
+
+      throw new Error(message);
+    }
+
+    try {
+      return await response.json();
+    } catch (_) {
+      return {};
+    }
+  };
+
+  const formatList = (items) => (Array.isArray(items) && items.length ? items.join(', ') : 'Ikke oppgitt');
+
+  const buildEmailPayload = (details) => {
+    const {
+      name,
+      email,
+      phone,
+      message,
+      eventType,
+      duration,
+      startDate,
+      endDate,
+      spaces,
+      services,
+      attendees
+    } = details;
+
+    const dateFormatter = new Intl.DateTimeFormat('nb-NO', {
+      dateStyle: 'full',
+      timeStyle: 'short'
+    });
+
+    const startLabel = dateFormatter.format(startDate);
+    const endLabel = dateFormatter.format(endDate);
+
+    const attendeesLabel = Number.isFinite(attendees) ? `${attendees} personer` : 'Ikke oppgitt';
+
+    const textLines = [
+      'Ny bookingforespørsel fra Bjørkvang-skjemaet:',
+      `Navn: ${name}`,
+      `E-post: ${email}`,
+      `Telefon: ${phone}`,
+      `Arrangementstype: ${eventType}`,
+      `Start: ${startLabel}`,
+      `Slutt: ${endLabel}`,
+      `Varighet: ${duration} timer`,
+      `Arealer: ${formatList(spaces)}`,
+      `Tjenester: ${formatList(services)}`,
+      `Forventet antall deltakere: ${attendeesLabel}`,
+      '',
+      'Tilleggsinformasjon:',
+      message || 'Ingen tilleggsinformasjon.'
+    ];
+
+    const safeMessage = escapeHtml(message || '');
+
+    const html = `
+      <h1>Ny bookingforespørsel</h1>
+      <p>Det har kommet en ny forespørsel via skjemaet på bjorkvang.no.</p>
+      <table style="border-collapse:collapse;width:100%;max-width:600px" border="0" cellpadding="8">
+        <tbody>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Navn</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(name)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">E-post</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(email)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Telefon</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(phone)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Arrangementstype</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(eventType)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Start</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(startLabel)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Slutt</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(endLabel)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Varighet</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(`${duration} timer`)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Arealer</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(formatList(spaces))}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Tjenester</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(formatList(services))}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Forventet antall</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(attendeesLabel)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 style="margin-top:24px">Tilleggsinformasjon</h2>
+      <p style="white-space:pre-line">${safeMessage || 'Ingen tilleggsinformasjon.'}</p>
+    `;
+
+    return {
+      subject: `Ny bookingforespørsel: ${eventType} – ${startLabel}`,
+      text: textLines.join('\n'),
+      html
+    };
+  };
 
   const normaliseStatus = (value, fallback = 'pending') => {
     if (typeof value !== 'string') {
@@ -441,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function () {
   highlightDayCells();
 
   if (form) {
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
 
       if (statusEl) {
@@ -506,20 +663,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const status = computeSuggestedStatus(selectedSpaces, duration, '');
 
+      const bookingDetails = {
+        name,
+        email,
+        phone,
+        message,
+        duration,
+        eventType,
+        spaces: selectedSpaces,
+        services: selectedServices,
+        attendees: attendeeCount,
+        startDate,
+        endDate
+      };
+
+      const emailPayload = buildEmailPayload(bookingDetails);
+
+      try {
+        showStatus('Sender forespørselen ...', 'info');
+        await sendBookingEmail(emailPayload);
+      } catch (error) {
+        console.error('Kunne ikke sende bookingforespørsel:', error);
+        showStatus(
+          'Kunne ikke sende bookingforespørselen. Sjekk nettforbindelsen og prøv igjen litt senere.',
+          'error'
+        );
+        return;
+      }
+
+      const { startDate: startDateObj, endDate: endDateObj, ...restDetails } = bookingDetails;
+
       const newEvent = {
         title: eventType || 'Reservert',
         start: startDate.toISOString(),
         end: endDate.toISOString(),
         extendedProps: {
-          name,
-          email,
-          phone,
-          message,
-          duration,
-          eventType,
-          spaces: selectedSpaces,
-          services: selectedServices,
-          attendees: attendeeCount,
+          ...restDetails,
+          startDate: startDateObj.toISOString(),
+          endDate: endDateObj.toISOString(),
           status,
           createdAt: new Date().toISOString()
         }
