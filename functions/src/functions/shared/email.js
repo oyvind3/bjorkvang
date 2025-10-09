@@ -1,45 +1,52 @@
-const nodemailer = require('nodemailer');
+const fetch = require('node-fetch');
 
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.useplunk.com';
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_SECURE = process.env.SMTP_SECURE === 'true' || SMTP_PORT === 465;
-const SMTP_USER = process.env.SMTP_USER || 'plunk';
-const SMTP_PASSWORD = process.env.SMTP_PASSWORD;
-
-let transporter;
+const PLUNK_API_URL = 'https://api.useplunk.com/v1/send';
 
 /**
- * Lazily create the Nodemailer transporter used for every Plunk email.
- * Reuses the same instance between function executions when the worker stays warm.
- */
-const getTransporter = () => {
-    if (!SMTP_PASSWORD) {
-        throw new Error('SMTP_PASSWORD environment variable is not set.');
-    }
-
-    if (!transporter) {
-        transporter = nodemailer.createTransport({
-            host: SMTP_HOST,
-            port: SMTP_PORT,
-            secure: SMTP_SECURE,
-            auth: {
-                user: SMTP_USER,
-                pass: SMTP_PASSWORD,
-            },
-        });
-    }
-
-    return transporter;
-};
-
-/**
- * Send an email using the shared Plunk transporter.
- * @param {import('nodemailer').SendMailOptions} options
- * @returns {Promise<import('nodemailer/lib/smtp-transport').SentMessageInfo>}
+ * Send an email using Plunk's REST API.
+ * @param {{ from?: string; to?: string; subject?: string; text?: string; html?: string; }} options
+ * @returns {Promise<{ messageId?: string; response?: any }>}
  */
 const sendEmail = async (options) => {
-    const transporterInstance = getTransporter();
-    return transporterInstance.sendMail(options);
+    const token = process.env.PLUNK_API_TOKEN;
+
+    if (!token) {
+        throw new Error('PLUNK_API_TOKEN environment variable is not set.');
+    }
+
+    const response = await fetch(PLUNK_API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+            from: options.from,
+            to: options.to,
+            subject: options.subject,
+            text: options.text,
+            html: options.html,
+        }),
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text().catch(() => undefined);
+        throw new Error(`Failed to send email. Status: ${response.status} ${response.statusText}. Body: ${errorBody}`);
+    }
+
+    let payload;
+    try {
+        payload = await response.json();
+    } catch (error) {
+        payload = undefined;
+    }
+
+    const messageId = payload?.data?.id || payload?.id || payload?.messageId;
+
+    return {
+        messageId,
+        response: payload,
+    };
 };
 
 module.exports = {
