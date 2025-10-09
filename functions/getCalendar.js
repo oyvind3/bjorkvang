@@ -1,6 +1,6 @@
 const { app } = require('@azure/functions');
-const { createJsonResponse } = require('../shared/http');
-const { listBookings } = require('../shared/bookingStore');
+const { createJsonResponse } = require('./http');
+const { listBookings } = require('./bookingStore');
 
 /**
  * Public calendar endpoint. Masks requester details and only exposes availability.
