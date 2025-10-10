@@ -4,9 +4,9 @@ app.setup({
     enableHttpStream: true,
 });
 
-require('./functions/approveBooking');
-require('./functions/bookingRequest');
-require('./functions/emailHttpTriggerBooking');
-require('./functions/getAdminCalendar');
-require('./functions/getCalendar');
-require('./functions/rejectBooking');
+require('../approveBooking');
+require('../bookingRequest');
+require('../emailHttpTriggerBooking');
+require('../getAdminCalendar');
+require('../getCalendar');
+require('../rejectBooking');
