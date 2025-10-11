@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const attendeesInput = document.getElementById('attendees');
 
   const BOOKING_EMAIL_ENDPOINT =
-    'https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/email-http-trigger-booking';
+    'https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/emailhttptriggerbooking';
 
   const STATUS_VALUES = ['pending', 'confirmed', 'blocked'];
 
