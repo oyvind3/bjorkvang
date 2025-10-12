@@ -19,10 +19,11 @@ module.exports = async function (context, req) {
   const subject = body.subject || "Plunk test";
   const html = body.html || `<p>Hei fra Azure Function via Plunk!</p>`;
   const text = body.text || "Hei fra Azure Function via Plunk!";
+  const replyTo = body.replyTo && String(body.replyTo).trim();
 
-  if (!to) {
-    context.log.warn('Missing "to" address.');
-    return createJsonResponse(400, { error: 'Missing "to" field.' });
+  if (!to || !from) {
+    context.log.warn('Missing required email addresses.', { to, from });
+    return createJsonResponse(400, { error: 'Missing "to" or "from" field.' });
   }
 
   if (!process.env.PLUNK_API_TOKEN) {
@@ -33,8 +34,11 @@ module.exports = async function (context, req) {
   // Gjør HTTPS-kall mot Plunk API manuelt (uten fetch)
   const payload = JSON.stringify({
     to,
+    from,
     subject,
-    body: html || text
+    text,
+    html,
+    replyTo: replyTo || undefined,
   });
 
   const options = {
