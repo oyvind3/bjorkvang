@@ -140,11 +140,19 @@ document.addEventListener('DOMContentLoaded', function () {
     };
   };
 
-  const sendBookingEmail = async (details) => {
+  const sendBookingEmail = async (formData, overrides = {}) => {
     if (!BOOKING_EMAIL_ENDPOINT) {
       throw new Error('Mangler endepunkt for booking-e-post.');
     }
 
+    const baseDetails =
+      formData instanceof FormData
+        ? Object.fromEntries(formData.entries())
+        : typeof formData === 'object' && formData !== null
+          ? { ...formData }
+          : {};
+
+    const details = { ...baseDetails, ...overrides };
     const payload = buildEmailPayload(details);
 
     try {
@@ -668,7 +676,8 @@ document.addEventListener('DOMContentLoaded', function () {
         statusEl.textContent = '';
       }
 
-      const formValues = Object.fromEntries(new FormData(form));
+      const formData = new FormData(form);
+      const formValues = Object.fromEntries(formData.entries());
 
       const name = (formValues.name || '').trim();
       const email = (formValues.email || '').trim();
@@ -743,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       try {
         showStatus('Sender forespørselen ...', 'info');
-        await sendBookingEmail(bookingDetails);
+        await sendBookingEmail(formData, bookingDetails);
       } catch (error) {
         console.error('Kunne ikke sende bookingforespørsel:', error);
         showStatus(
