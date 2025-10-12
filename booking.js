@@ -157,8 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
           to: payload.to,
           from: payload.from,
           subject: payload.subject,
-          html: payload.html,
-          text: payload.text
+          html: payload.html
         })
       });
 
@@ -614,11 +613,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
         info.el.addEventListener('mouseenter', handleMouseEnter);
         info.el.addEventListener('mouseleave', handleMouseLeave);
+
+        info.el._bookingHandleMouseEnter = handleMouseEnter;
+        info.el._bookingHandleMouseLeave = handleMouseLeave;
+        info.el._bookingHandleMouseMove = handleMouseMove;
       },
-      eventWillUnmount: function () {
+      eventWillUnmount: function (info) {
         const tooltip = document.getElementById('fc-tooltip');
         if (tooltip) {
           tooltip.remove();
+        }
+
+        if (info?.el) {
+          if (info.el._bookingHandleMouseEnter) {
+            info.el.removeEventListener('mouseenter', info.el._bookingHandleMouseEnter);
+            delete info.el._bookingHandleMouseEnter;
+          }
+
+          if (info.el._bookingHandleMouseLeave) {
+            info.el.removeEventListener('mouseleave', info.el._bookingHandleMouseLeave);
+            delete info.el._bookingHandleMouseLeave;
+          }
+
+          if (info.el._bookingHandleMouseMove) {
+            info.el.removeEventListener('mousemove', info.el._bookingHandleMouseMove);
+            delete info.el._bookingHandleMouseMove;
+          }
         }
       },
       datesSet: function () {
