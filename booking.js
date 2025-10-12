@@ -12,8 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const timeInput = document.getElementById('time');
   const durationInputEl = document.getElementById('duration');
   const eventTypeSelect = document.getElementById('event-type');
-  const phoneInput = document.getElementById('phone');
-  const attendeesInput = document.getElementById('attendees');
 
   const BOOKING_EMAIL_ENDPOINT =
     'https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/emailHttpTriggerBooking';
@@ -34,47 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     return value.replace(/[&<>"']/g, (match) => htmlEscapes[match] || match);
-  };
-
-  const sendBookingEmail = async (payload) => {
-    if (!BOOKING_EMAIL_ENDPOINT) {
-      throw new Error('Mangler endepunkt for booking-e-post.');
-    }
-
-    try {
-      const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        let message = 'Kunne ikke sende bookingforespørselen.';
-        try {
-          const data = await response.json();
-          if (data?.error) {
-            message = data.error;
-          }
-        } catch (_) {
-          // Ignorer JSON-feil og bruk standard melding
-        }
-
-        throw new Error(message);
-      }
-
-      try {
-        return await response.json();
-      } catch (_) {
-        return {};
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Kunne ikke sende bookingforespørselen.');
-    }
   };
 
   const formatList = (items) => (Array.isArray(items) && items.length ? items.join(', ') : 'Ikke oppgitt');
@@ -181,6 +138,55 @@ document.addEventListener('DOMContentLoaded', function () {
       text: textLines.join('\n'),
       html
     };
+  };
+
+  const sendBookingEmail = async (details) => {
+    if (!BOOKING_EMAIL_ENDPOINT) {
+      throw new Error('Mangler endepunkt for booking-e-post.');
+    }
+
+    const payload = buildEmailPayload(details);
+
+    try {
+      const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          to: payload.to,
+          from: payload.from,
+          subject: payload.subject,
+          html: payload.html,
+          text: payload.text
+        })
+      });
+
+      if (!response.ok) {
+        let message = 'Kunne ikke sende bookingforespørselen.';
+        try {
+          const data = await response.json();
+          if (data?.error) {
+            message = data.error;
+          }
+        } catch (_) {
+          // Ignorer JSON-feil og bruk standard melding
+        }
+
+        throw new Error(message);
+      }
+
+      try {
+        return await response.json();
+      } catch (_) {
+        return {};
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Kunne ikke sende bookingforespørselen.');
+    }
   };
 
   const normaliseStatus = (value, fallback = 'pending') => {
@@ -546,47 +552,74 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         calendar.unselect();
       },
-      eventMouseover: function (info) {
-        const tooltip = document.createElement('div');
-        tooltip.id = 'fc-tooltip';
-        tooltip.style.position = 'absolute';
-        tooltip.style.zIndex = '10001';
-        tooltip.style.background = '#fff';
-        tooltip.style.border = '1px solid #ccc';
-        tooltip.style.padding = '6px 9px';
-        tooltip.style.borderRadius = '8px';
-        tooltip.style.boxShadow = '0 8px 18px rgba(24, 61, 44, 0.18)';
-        tooltip.setAttribute('role', 'tooltip');
+      eventDidMount: function (info) {
+        const removeTooltip = () => {
+          const tooltip = document.getElementById('fc-tooltip');
+          if (tooltip) {
+            tooltip.remove();
+          }
+        };
 
-        const start = info.event.start ? new Date(info.event.start) : null;
-        const end = info.event.end ? new Date(info.event.end) : null;
-        const timeRange =
-          start && end
-            ? `${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('nb-NO', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })}`
-            : start
-              ? start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
-              : '';
+        const handleMouseMove = (event) => {
+          const tooltip = document.getElementById('fc-tooltip');
+          if (!tooltip) {
+            return;
+          }
+          tooltip.style.left = event.pageX + 12 + 'px';
+          tooltip.style.top = event.pageY + 12 + 'px';
+        };
 
-        const spaces = Array.isArray(info.event.extendedProps?.spaces) && info.event.extendedProps.spaces.length
-          ? `<br>${info.event.extendedProps.spaces.join(', ')}`
-          : '';
-        tooltip.innerHTML =
-          `<strong>${info.event.extendedProps?.eventType || 'Reservasjon'}</strong><br>` +
-          `${start ? start.toLocaleDateString('nb-NO') : ''} ${timeRange}` +
-          (spaces ? `<br>${spaces.replace(/^<br>/, '')}` : '');
+        const handleMouseEnter = () => {
+          removeTooltip();
 
-        document.body.appendChild(tooltip);
-        info.el.addEventListener('mousemove', function (e) {
-          tooltip.style.left = e.pageX + 12 + 'px';
-          tooltip.style.top = e.pageY + 12 + 'px';
-        });
+          const tooltip = document.createElement('div');
+          tooltip.id = 'fc-tooltip';
+          tooltip.style.position = 'absolute';
+          tooltip.style.zIndex = '10001';
+          tooltip.style.background = '#fff';
+          tooltip.style.border = '1px solid #ccc';
+          tooltip.style.padding = '6px 9px';
+          tooltip.style.borderRadius = '8px';
+          tooltip.style.boxShadow = '0 8px 18px rgba(24, 61, 44, 0.18)';
+          tooltip.setAttribute('role', 'tooltip');
+
+          const start = info.event.start ? new Date(info.event.start) : null;
+          const end = info.event.end ? new Date(info.event.end) : null;
+          const timeRange =
+            start && end
+              ? `${start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('nb-NO', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}`
+              : start
+                ? start.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })
+                : '';
+
+          const spaces = Array.isArray(info.event.extendedProps?.spaces) && info.event.extendedProps.spaces.length
+            ? `<br>${info.event.extendedProps.spaces.join(', ')}`
+            : '';
+          tooltip.innerHTML =
+            `<strong>${info.event.extendedProps?.eventType || 'Reservasjon'}</strong><br>` +
+            `${start ? start.toLocaleDateString('nb-NO') : ''} ${timeRange}` +
+            (spaces ? `<br>${spaces.replace(/^<br>/, '')}` : '');
+
+          document.body.appendChild(tooltip);
+          info.el.addEventListener('mousemove', handleMouseMove);
+        };
+
+        const handleMouseLeave = () => {
+          info.el.removeEventListener('mousemove', handleMouseMove);
+          removeTooltip();
+        };
+
+        info.el.addEventListener('mouseenter', handleMouseEnter);
+        info.el.addEventListener('mouseleave', handleMouseLeave);
       },
-      eventMouseout: function () {
+      eventWillUnmount: function () {
         const tooltip = document.getElementById('fc-tooltip');
-        if (tooltip) tooltip.remove();
+        if (tooltip) {
+          tooltip.remove();
+        }
       },
       datesSet: function () {
         requestAnimationFrame(() => {
@@ -615,15 +648,17 @@ document.addEventListener('DOMContentLoaded', function () {
         statusEl.textContent = '';
       }
 
-      const name = document.getElementById('name')?.value.trim();
-      const email = document.getElementById('email')?.value.trim();
-      const phone = phoneInput?.value.trim();
-      const dateValue = dateInput?.value;
-      const timeValue = timeInput?.value;
-      const durationInput = durationInputEl?.value;
-      const eventType = eventTypeSelect?.value || '';
-      const message = document.getElementById('message')?.value.trim() || '';
-      const attendees = attendeesInput?.value.trim() || '';
+      const formValues = Object.fromEntries(new FormData(form));
+
+      const name = (formValues.name || '').trim();
+      const email = (formValues.email || '').trim();
+      const phone = (formValues.phone || '').trim();
+      const dateValue = formValues.date || '';
+      const timeValue = formValues.time || '';
+      const durationInput = formValues.duration || '';
+      const eventType = (formValues.eventType || '').trim();
+      const message = (formValues.message || '').trim();
+      const attendeesValue = (formValues.attendees || '').trim();
       const selectedSpaces = Array.from(form.querySelectorAll('input[name="spaces"]:checked')).map((input) => input.value);
       const selectedServices = Array.from(form.querySelectorAll('input[name="services"]:checked')).map((input) => input.value);
 
@@ -666,8 +701,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      const attendeeCount = attendees !== '' && Number.isFinite(Number.parseInt(attendees, 10))
-        ? Number.parseInt(attendees, 10)
+      const attendeeCount = attendeesValue !== '' && Number.isFinite(Number.parseInt(attendeesValue, 10))
+        ? Number.parseInt(attendeesValue, 10)
         : null;
 
       const status = computeSuggestedStatus(selectedSpaces, duration, '');
@@ -686,11 +721,9 @@ document.addEventListener('DOMContentLoaded', function () {
         endDate
       };
 
-      const emailPayload = buildEmailPayload(bookingDetails);
-
       try {
         showStatus('Sender forespørselen ...', 'info');
-        await sendBookingEmail(emailPayload);
+        await sendBookingEmail(bookingDetails);
       } catch (error) {
         console.error('Kunne ikke sende bookingforespørsel:', error);
         showStatus(
