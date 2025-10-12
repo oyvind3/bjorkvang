@@ -1,17 +1,17 @@
 {
   "bindings": [
     {
-      "authLevel": "function",
+      "authLevel": "anonymous",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["post"],
-      "route": "email-http-trigger-booking"
+      "methods": [ "post", "options" ]
     },
     {
       "type": "http",
       "direction": "out",
-      "name": "res"
+      "name": "$return"
     }
-  ]
+  ],
+  "scriptFile": "index.js"
 }
