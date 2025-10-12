@@ -140,61 +140,44 @@ document.addEventListener('DOMContentLoaded', function () {
     };
   };
 
-  const sendBookingEmail = async (formData, overrides = {}) => {
-    if (!BOOKING_EMAIL_ENDPOINT) {
-      throw new Error('Mangler endepunkt for booking-e-post.');
-    }
-
-    const baseDetails =
-      formData instanceof FormData
-        ? Object.fromEntries(formData.entries())
-        : typeof formData === 'object' && formData !== null
-          ? { ...formData }
-          : {};
-
-    const details = { ...baseDetails, ...overrides };
-    const payload = buildEmailPayload(details);
-
-    try {
-      const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
-        method: 'POST',
+  async function sendBookingEmail(formElement) {
+    const data = Object.fromEntries(new FormData(formElement));
+  
+    // 👇 logg hva som faktisk sendes
+    console.log("Sender bookingdata:", data);
+  
+    const payload = {
+      to: "skype.oyvind@hotmail.com",
+      from: "booking@finsrud.cloud",
+      subject: "Ny bookingforespørsel fra nettsiden",
+      html: `<h3>Ny forespørsel</h3>
+             <p><strong>Navn:</strong> ${data.name || "(mangler)"}</p>
+             <p><strong>E-post:</strong> ${data.email || "(mangler)"}</p>
+             <p><strong>Tidspunkt:</strong> ${data.time || "(mangler)"}</p>`
+    };
+  
+    console.log("Sender payload:", payload);
+  
+    const response = await fetch(
+      "https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/emailHttpTriggerBooking",
+      {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Accept": "application/json",
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          to: payload.to,
-          from: payload.from,
-          subject: payload.subject,
-          html: payload.html
-        })
-      });
-
-      if (!response.ok) {
-        let message = 'Kunne ikke sende bookingforespørselen.';
-        try {
-          const data = await response.json();
-          if (data?.error) {
-            message = data.error;
-          }
-        } catch (_) {
-          // Ignorer JSON-feil og bruk standard melding
-        }
-
-        throw new Error(message);
+        body: JSON.stringify(payload)
       }
-
-      try {
-        return await response.json();
-      } catch (_) {
-        return {};
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Kunne ikke sende bookingforespørselen.');
-    }
+    );
+  
+    console.log("Respons status:", response.status);
+    const text = await response.text();
+    console.log("Respons body:", text);
+  
+    if (!response.ok) throw new Error("Kunne ikke sende bookingforespørselen.");
+    return JSON.parse(text);
   };
+  
 
   const normaliseStatus = (value, fallback = 'pending') => {
     if (typeof value !== 'string') {
