@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const attendeesInput = document.getElementById('attendees');
 
   const BOOKING_EMAIL_ENDPOINT =
-    'https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/emailhttptriggerbooking';
+    'https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/emailHttpTriggerBooking';
 
   const STATUS_VALUES = ['pending', 'confirmed', 'blocked'];
 
@@ -41,32 +41,39 @@ document.addEventListener('DOMContentLoaded', function () {
       throw new Error('Mangler endepunkt for booking-e-post.');
     }
 
-    const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
 
-    if (!response.ok) {
-      let message = 'Kunne ikke sende bookingforespørselen.';
-      try {
-        const data = await response.json();
-        if (data?.error) {
-          message = data.error;
+      if (!response.ok) {
+        let message = 'Kunne ikke sende bookingforespørselen.';
+        try {
+          const data = await response.json();
+          if (data?.error) {
+            message = data.error;
+          }
+        } catch (_) {
+          // Ignorer JSON-feil og bruk standard melding
         }
-      } catch (_) {
-        // Ignorer JSON-feil og bruk standard melding
+
+        throw new Error(message);
       }
 
-      throw new Error(message);
-    }
-
-    try {
-      return await response.json();
-    } catch (_) {
-      return {};
+      try {
+        return await response.json();
+      } catch (_) {
+        return {};
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Kunne ikke sende bookingforespørselen.');
     }
   };
 
@@ -168,6 +175,8 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
 
     return {
+      to: 'skype.oyvind@hotmail.com',
+      from: 'booking@finsrud.cloud',
       subject: `Ny bookingforespørsel: ${eventType} – ${startLabel}`,
       text: textLines.join('\n'),
       html
