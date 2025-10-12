@@ -10,7 +10,12 @@ module.exports = async function (context, req) {
   }
 
   const body = req.body || {};
-  const to = body.to || process.env.DEFAULT_TO_ADDRESS;
+  const defaultToAddress =
+    (process.env.BOARD_TO_ADDRESS && process.env.BOARD_TO_ADDRESS.trim()) ||
+    (process.env.DEFAULT_TO_ADDRESS && process.env.DEFAULT_TO_ADDRESS.trim()) ||
+    "helgoens.vel@example.com";
+
+  const to = (body.to && String(body.to).trim()) || defaultToAddress;
   const subject = body.subject || "Plunk test";
   const html = body.html || `<p>Hei fra Azure Function via Plunk!</p>`;
   const text = body.text || "Hei fra Azure Function via Plunk!";
