@@ -11,7 +11,12 @@ app.http('emailHttpTriggerBooking', {
         }
 
         const body = await parseBody(request);
-        const to = body.to || process.env.DEFAULT_TO_ADDRESS;
+        const defaultToAddress =
+            (process.env.BOARD_TO_ADDRESS && process.env.BOARD_TO_ADDRESS.trim()) ||
+            (process.env.DEFAULT_TO_ADDRESS && process.env.DEFAULT_TO_ADDRESS.trim()) ||
+            'helgoens.vel@example.com';
+
+        const to = (body.to && String(body.to).trim()) || defaultToAddress;
         const from = body.from || process.env.DEFAULT_FROM_ADDRESS;
         const subject = body.subject || 'Plunk is awesome!';
         const text = body.text || undefined;
