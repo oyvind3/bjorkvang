@@ -53,8 +53,9 @@
                     <span class="hero-badge" role="listitem">Fleksible romløsninger</span>
                 </div>
                 <div class="hero-actions">
-                    <a class="button" href="#calendar">Finn ledige datoer</a>
-                    <a class="button secondary" href="produkter.html">Sjekk priser</a>
+                    <a class="button" href="#booking-form">Send forespørsel</a>
+                    <a class="button secondary" href="#calendar">Finn ledige datoer</a>
+                    <a class="button ghost" href="produkter.html">Sjekk priser</a>
                 </div>
             </div>
             <figure class="hero-media">
@@ -64,6 +65,135 @@
     </section>
 
     <main class="page-main" id="main-content">
+        <section class="page-section booking-form-section" id="booking-form-section" aria-labelledby="booking-form-heading">
+            <div class="container">
+                <div class="section-heading">
+                    <h2 id="booking-form-heading">Send leieforespørsel</h2>
+                    <p>Fortell oss om arrangementet og hva du ønsker å leie. Styret følger opp med bekreftelse og digital kontrakt.</p>
+                </div>
+                <form id="booking-form">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label for="name">Navn</label>
+                            <input type="text" id="name" name="name" autocomplete="name" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="email">E-post</label>
+                            <input type="email" id="email" name="email" autocomplete="email" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="phone">Telefon</label>
+                            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+47 000 00 000" required>
+                        </div>
+
+                        <div class="form-field form-field--full">
+                            <label for="notification-email">Kopi til (valgfritt)</label>
+                            <input type="email" id="notification-email" name="notificationEmail" multiple placeholder="Legg inn flere e-postadresser separert med komma">
+                            <p class="form-help">Oppgi mottakere som skal få kopi av forespørselen. Lar du feltet stå tomt brukes standardmottakeren.</p>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="event-type">Arrangementstype</label>
+                            <select id="event-type" name="eventType" required>
+                                <option value="" disabled selected>Velg arrangement</option>
+                                <option value="Familiefeiring">Familiefeiring</option>
+                                <option value="Møte eller kurs">Møte eller kurs</option>
+                                <option value="Konsert eller forestilling">Konsert eller forestilling</option>
+                                <option value="Dugnad eller nærmiljøtreff">Dugnad eller nærmiljøtreff</option>
+                                <option value="Annet">Annet</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="date">Dato</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="time">Starttid</label>
+                            <input type="time" id="time" name="time" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="duration">Varighet (timer)</label>
+                            <input type="number" id="duration" name="duration" min="1" max="12" value="4" required>
+                        </div>
+
+                        <fieldset class="form-fieldset form-fieldset--full" aria-labelledby="spaces-label">
+                            <legend id="spaces-label">Hva ønsker du å leie?</legend>
+                            <p class="fieldset-description">Velg de rommene som passer behovet ditt.</p>
+                            <div class="option-grid">
+                                <label class="option-pill">
+                                    <input type="checkbox" name="spaces" value="Kaffestue">
+                                    <span>Kaffestue</span>
+                                </label>
+                                <label class="option-pill">
+                                    <input type="checkbox" name="spaces" value="Salen">
+                                    <span>Salen</span>
+                                </label>
+                                <label class="option-pill">
+                                    <input type="checkbox" name="spaces" value="Kjøkken">
+                                    <span>Kjøkken</span>
+                                </label>
+                                <label class="option-pill">
+                                    <input type="checkbox" name="spaces" value="Hele lokalet">
+                                    <span>Hele lokalet</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="form-fieldset form-fieldset--full" aria-labelledby="services-label">
+                            <legend id="services-label">Tillegg og tilrettelegging</legend>
+                            <p class="fieldset-description">Gi oss et hint om ekstra behov slik at vi kan planlegge ressursene.</p>
+                            <div class="option-grid">
+                                <label class="option-pill">
+                                    <input type="checkbox" name="services" value="Teknisk utstyr">
+                                    <span>Teknisk utstyr</span>
+                                </label>
+                                <label class="option-pill">
+                                    <input type="checkbox" name="services" value="Serveringskjøkken">
+                                    <span>Serveringskjøkken</span>
+                                </label>
+                                <label class="option-pill">
+                                    <input type="checkbox" name="services" value="Riggehjelp">
+                                    <span>Riggehjelp</span>
+                                </label>
+                                <label class="option-pill">
+                                    <input type="checkbox" name="services" value="Tilgjengelighetstiltak">
+                                    <span>Tilgjengelighetstiltak</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <div class="form-field form-field--full">
+                            <label for="attendees">Antatt antall deltakere</label>
+                            <input type="number" id="attendees" name="attendees" min="1" placeholder="Hvor mange kommer?">
+                        </div>
+
+                        <div class="form-field form-field--full">
+                            <label for="message">Tilleggsinformasjon</label>
+                            <textarea id="message" name="message" rows="4" placeholder="Hva skal lokalet brukes til?"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="button" type="submit">Send forespørsel</button>
+                        <p id="booking-status" class="form-status" role="status" aria-live="polite"></p>
+                    </div>
+                    <p class="form-footnote" role="note">Forespørslene lagres lokalt i nettleseren din slik at du kan følge status senere. Styret får samme oversikt og tar kontakt for digital signering av avtalen.</p>
+                </form>
+                <div class="process-callout" aria-labelledby="process-heading">
+                    <h3 id="process-heading">Dette skjer etter at du sender forespørselen</h3>
+                    <ol>
+                        <li>Du får en e-postbekreftelse fra styret med foreslått pris og praktisk informasjon.</li>
+                        <li>Leieavtalen sendes digitalt for signering og lagres sammen med forespørselen.</li>
+                        <li>Når avtalen er signert, mottar du nøkkelinformasjon og sjekklister for klargjøring.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
         <section class="page-section space-gallery-section" aria-labelledby="space-gallery-heading">
             <div class="container">
                 <div class="section-heading">
@@ -206,129 +336,6 @@
                         <a class="button ghost" href="mailto:helgoens.vel@example.com">Kontakt bookingansvarlig</a>
                     </div>
                 </aside>
-            </div>
-        </section>
-
-        <section class="page-section" aria-labelledby="booking-form-heading">
-            <div class="container">
-                <div class="section-heading">
-                    <h2 id="booking-form-heading">Send leieforespørsel</h2>
-                    <p>Fortell oss om arrangementet og hva du ønsker å leie. Styret følger opp med bekreftelse og digital kontrakt.</p>
-                </div>
-                <form id="booking-form">
-                    <div class="form-grid">
-                        <div class="form-field">
-                            <label for="name">Navn</label>
-                            <input type="text" id="name" name="name" autocomplete="name" required>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="email">E-post</label>
-                            <input type="email" id="email" name="email" autocomplete="email" required>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="phone">Telefon</label>
-                            <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+47 000 00 000" required>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="event-type">Arrangementstype</label>
-                            <select id="event-type" name="eventType" required>
-                                <option value="" disabled selected>Velg arrangement</option>
-                                <option value="Familiefeiring">Familiefeiring</option>
-                                <option value="Møte eller kurs">Møte eller kurs</option>
-                                <option value="Konsert eller forestilling">Konsert eller forestilling</option>
-                                <option value="Dugnad eller nærmiljøtreff">Dugnad eller nærmiljøtreff</option>
-                                <option value="Annet">Annet</option>
-                            </select>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="date">Dato</label>
-                            <input type="date" id="date" name="date" required>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="time">Starttid</label>
-                            <input type="time" id="time" name="time" required>
-                        </div>
-
-                        <div class="form-field">
-                            <label for="duration">Varighet (timer)</label>
-                            <input type="number" id="duration" name="duration" min="1" max="12" value="4" required>
-                        </div>
-
-                        <fieldset class="form-fieldset form-fieldset--full" aria-labelledby="spaces-label">
-                            <legend id="spaces-label">Hva ønsker du å leie?</legend>
-                            <p class="fieldset-description">Velg de rommene som passer behovet ditt.</p>
-                            <div class="option-grid">
-                                <label class="option-pill">
-                                    <input type="checkbox" name="spaces" value="Kaffestue">
-                                    <span>Kaffestue</span>
-                                </label>
-                                <label class="option-pill">
-                                    <input type="checkbox" name="spaces" value="Salen">
-                                    <span>Salen</span>
-                                </label>
-                                <label class="option-pill">
-                                    <input type="checkbox" name="spaces" value="Kjøkken">
-                                    <span>Kjøkken</span>
-                                </label>
-                                <label class="option-pill">
-                                    <input type="checkbox" name="spaces" value="Hele lokalet">
-                                    <span>Hele lokalet</span>
-                                </label>
-                            </div>
-                        </fieldset>
-
-                        <fieldset class="form-fieldset form-fieldset--full" aria-labelledby="services-label">
-                            <legend id="services-label">Tillegg og tilrettelegging</legend>
-                            <p class="fieldset-description">Gi oss et hint om ekstra behov slik at vi kan planlegge ressursene.</p>
-                            <div class="option-grid">
-                                <label class="option-pill">
-                                    <input type="checkbox" name="services" value="Teknisk utstyr">
-                                    <span>Teknisk utstyr</span>
-                                </label>
-                                <label class="option-pill">
-                                    <input type="checkbox" name="services" value="Serveringskjøkken">
-                                    <span>Serveringskjøkken</span>
-                                </label>
-                                <label class="option-pill">
-                                    <input type="checkbox" name="services" value="Riggehjelp">
-                                    <span>Riggehjelp</span>
-                                </label>
-                                <label class="option-pill">
-                                    <input type="checkbox" name="services" value="Tilgjengelighetstiltak">
-                                    <span>Tilgjengelighetstiltak</span>
-                                </label>
-                            </div>
-                        </fieldset>
-
-                        <div class="form-field form-field--full">
-                            <label for="attendees">Antatt antall deltakere</label>
-                            <input type="number" id="attendees" name="attendees" min="1" placeholder="Hvor mange kommer?">
-                        </div>
-
-                        <div class="form-field form-field--full">
-                            <label for="message">Tilleggsinformasjon</label>
-                            <textarea id="message" name="message" rows="4" placeholder="Hva skal lokalet brukes til?"></textarea>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button class="button" type="submit">Send forespørsel</button>
-                        <p id="booking-status" class="form-status" role="status" aria-live="polite"></p>
-                    </div>
-                    <p class="form-footnote" role="note">Forespørslene lagres lokalt i nettleseren din slik at du kan følge status senere. Styret får samme oversikt og tar kontakt for digital signering av avtalen.</p>
-                </form>
-                <div class="process-callout" aria-labelledby="process-heading">
-                    <h3 id="process-heading">Dette skjer etter at du sender forespørselen</h3>
-                    <ol>
-                        <li>Du får en e-postbekreftelse fra styret med foreslått pris og praktisk informasjon.</li>
-                        <li>Leieavtalen sendes digitalt for signering og lagres sammen med forespørselen.</li>
-                        <li>Når avtalen er signert, mottar du nøkkelinformasjon og sjekklister for klargjøring.</li>
-                    </ol>
-                </div>
             </div>
         </section>
 

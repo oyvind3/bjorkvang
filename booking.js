@@ -36,7 +36,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const formatList = (items) => (Array.isArray(items) && items.length ? items.join(', ') : 'Ikke oppgitt');
 
-  const buildEmailPayload = (details) => {
+  const isValidEmail = (value) => {
+    if (typeof value !== 'string') {
+      return false;
+    }
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return false;
+    }
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+  };
+
+  const buildEmailPayload = (details, recipients = []) => {
     const {
       name,
       email,
@@ -131,52 +142,58 @@ document.addEventListener('DOMContentLoaded', function () {
       <p style="white-space:pre-line">${safeMessage || 'Ingen tilleggsinformasjon.'}</p>
     `;
 
-    return {
-      to: 'skype.oyvind@hotmail.com',
+    const recipientList = Array.isArray(recipients) ? recipients.filter(isValidEmail) : [];
+    const toField = recipientList.length ? recipientList.join(',') : undefined;
+
+    const payload = {
       from: 'booking@finsrud.cloud',
       subject: `Ny bookingforespørsel: ${eventType} – ${startLabel}`,
       text: textLines.join('\n'),
-      html
+      html,
+      replyTo: email
     };
+
+    if (toField) {
+      payload.to = toField;
+    }
+
+    return payload;
   };
 
-  async function sendBookingEmail(formElement) {
-    const data = Object.fromEntries(new FormData(formElement));
-  
-    // 👇 logg hva som faktisk sendes
-    console.log("Sender bookingdata:", data);
-  
-    const payload = {
-      to: "skype.oyvind@hotmail.com",
-      from: "booking@finsrud.cloud",
-      subject: "Ny bookingforespørsel fra nettsiden",
-      html: `<h3>Ny forespørsel</h3>
-             <p><strong>Navn:</strong> ${data.name || "(mangler)"}</p>
-             <p><strong>E-post:</strong> ${data.email || "(mangler)"}</p>
-             <p><strong>Tidspunkt:</strong> ${data.time || "(mangler)"}</p>`
-    };
-  
-    console.log("Sender payload:", payload);
-  
-    const response = await fetch(
-      "https://bjorkvang-duhsaxahgfe0btgv.westeurope-01.azurewebsites.net/api/emailHttpTriggerBooking",
-      {
-        method: "POST",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      }
-    );
-  
-    console.log("Respons status:", response.status);
+  async function sendBookingEmail(bookingDetails, recipients = []) {
+    const payload = buildEmailPayload(bookingDetails, recipients);
+
+    console.log('Sender bookingdata:', bookingDetails);
+    console.log('Sender payload:', payload);
+
+    const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('Respons status:', response.status);
     const text = await response.text();
-    console.log("Respons body:", text);
-  
-    if (!response.ok) throw new Error("Kunne ikke sende bookingforespørselen.");
-    return JSON.parse(text);
-  };
+    console.log('Respons body:', text);
+
+    if (!response.ok) {
+      throw new Error(`Kunne ikke sende bookingforespørselen. (${response.status})`);
+    }
+
+    if (!text) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      console.warn('Kunne ikke tolke respons som JSON:', error);
+      return {};
+    }
+  }
   
 
   const normaliseStatus = (value, fallback = 'pending') => {
@@ -673,6 +690,20 @@ document.addEventListener('DOMContentLoaded', function () {
       const attendeesValue = (formValues.attendees || '').trim();
       const selectedSpaces = Array.from(form.querySelectorAll('input[name="spaces"]:checked')).map((input) => input.value);
       const selectedServices = Array.from(form.querySelectorAll('input[name="services"]:checked')).map((input) => input.value);
+      const notificationEmailRaw = (formValues.notificationEmail || '').trim();
+
+      const notificationRecipients = notificationEmailRaw
+        ? notificationEmailRaw
+            .split(/[;,]/)
+            .map((value) => value.trim())
+            .filter(Boolean)
+        : [];
+
+      const invalidRecipient = notificationRecipients.find((value) => !isValidEmail(value));
+      if (invalidRecipient) {
+        showStatus(`"${invalidRecipient}" er ikke en gyldig e-postadresse.`, 'error');
+        return;
+      }
 
       if (!name || !email || !phone || !dateValue || !timeValue || !durationInput || !eventType) {
         showStatus('Vennligst fyll ut alle obligatoriske felter.', 'error');
@@ -735,7 +766,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       try {
         showStatus('Sender forespørselen ...', 'info');
-        await sendBookingEmail(formData, bookingDetails);
+        await sendBookingEmail(bookingDetails, notificationRecipients);
       } catch (error) {
         console.error('Kunne ikke sende bookingforespørsel:', error);
         showStatus(
