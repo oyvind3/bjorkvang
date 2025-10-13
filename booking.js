@@ -520,17 +520,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const seedEvents = [
       {
         title: 'Basar – hele lokalet',
-        start: '2025-11-01T00:00:00',
-        end: '2025-11-03T00:00:00',
+        start: '2024-11-01T00:00:00',
+        end: '2024-11-03T00:00:00',
         extendedProps: {
           eventType: 'Basar',
           message:
-            'Helgøens Vel arrangerer åpen basar denne helgen. Hele salen er reservert til felles og offentlig arrangement. Åpningstider: 14.00–17.00 både lørdag og søndag. Trekningen starter søndag kl. 17.00.',
+            'Helgøens Vel arrangerer åpen basar denne helgen. Hele salen er reservert til felles og offentlig arrangement.',
           spaces: ['Hele lokalet'],
           services: [],
           duration: 48,
           status: 'confirmed',
-          createdAt: '2025-06-01T00:00:00.000Z'
+          createdAt: '2024-06-01T00:00:00.000Z'
         }
       }
     ];
