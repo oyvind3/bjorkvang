@@ -516,7 +516,52 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 
+  const ensureSeedEvents = (eventList) => {
+    const seedEvents = [
+      {
+        title: 'Basar – hele lokalet',
+        start: '2024-11-01T00:00:00',
+        end: '2024-11-03T00:00:00',
+        extendedProps: {
+          eventType: 'Basar',
+          message:
+            'Helgøens Vel arrangerer åpen basar denne helgen. Hele salen er reservert til felles og offentlig arrangement.',
+          spaces: ['Hele lokalet'],
+          services: [],
+          duration: 48,
+          status: 'confirmed',
+          createdAt: '2024-06-01T00:00:00.000Z'
+        }
+      }
+    ];
+
+    const existingKeys = new Set(
+      eventList.map((event) => {
+        const startIso = new Date(event.start).toISOString();
+        const endIso = event.end ? new Date(event.end).toISOString() : '';
+        return `${startIso}|${endIso}`;
+      })
+    );
+
+    seedEvents.forEach((seedEvent) => {
+      const startIso = new Date(seedEvent.start).toISOString();
+      const endIso = seedEvent.end ? new Date(seedEvent.end).toISOString() : '';
+      const key = `${startIso}|${endIso}`;
+
+      if (!existingKeys.has(key)) {
+        const normalised = normaliseEvent(seedEvent);
+        if (normalised) {
+          eventList.push(normalised);
+          existingKeys.add(key);
+        }
+      }
+    });
+
+    eventList.sort((a, b) => new Date(a.start) - new Date(b.start));
+  };
+
   let events = loadEvents();
+  ensureSeedEvents(events);
 
   const updateReservationList = () => {
     if (!reservationListEl) {
