@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
   };
 
-  const buildEmailPayload = (details, recipients = []) => {
+  const buildAdminEmailPayload = (details, recipients = []) => {
     const {
       name,
       email,
@@ -160,10 +160,109 @@ document.addEventListener('DOMContentLoaded', function () {
     return payload;
   };
 
-  async function sendBookingEmail(bookingDetails, recipients = []) {
-    const payload = buildEmailPayload(bookingDetails, recipients);
+  const buildCustomerEmailPayload = (details) => {
+    const {
+      name,
+      email,
+      eventType,
+      startDate,
+      endDate,
+      duration,
+      spaces,
+      services,
+      attendees,
+      message
+    } = details;
 
-    console.log('Sender bookingdata:', bookingDetails);
+    if (!isValidEmail(email)) {
+      return null;
+    }
+
+    const dateFormatter = new Intl.DateTimeFormat('nb-NO', {
+      dateStyle: 'full',
+      timeStyle: 'short'
+    });
+
+    const startLabel = dateFormatter.format(startDate);
+    const endLabel = dateFormatter.format(endDate);
+    const attendeesLabel = Number.isFinite(attendees) ? `${attendees} personer` : 'Ikke oppgitt';
+
+    const summaryLines = [
+      `Arrangementstype: ${eventType}`,
+      `Start: ${startLabel}`,
+      `Slutt: ${endLabel}`,
+      `Varighet: ${duration} timer`,
+      `Arealer: ${formatList(spaces)}`,
+      `Tjenester: ${formatList(services)}`,
+      `Forventet antall deltakere: ${attendeesLabel}`,
+      '',
+      'Tilleggsinformasjon:',
+      message || 'Ingen tilleggsinformasjon.'
+    ];
+
+    const safeMessage = escapeHtml(message || '');
+
+    const html = `
+      <h1>Takk for din bookingforespørsel, ${escapeHtml(name)}!</h1>
+      <p>Vi har mottatt forespørselen din om å reservere Bjørkvang. Styret må bekrefte reservasjonen, og du vil få en e-post når den er behandlet.</p>
+      <h2>Oppsummering</h2>
+      <table style="border-collapse:collapse;width:100%;max-width:600px" border="0" cellpadding="8">
+        <tbody>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Arrangementstype</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(eventType)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Start</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(startLabel)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Slutt</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(endLabel)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Varighet</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(`${duration} timer`)}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Arealer</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(formatList(spaces))}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Tjenester</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(formatList(services))}</td>
+          </tr>
+          <tr>
+            <th align="left" style="text-align:left;border-bottom:1px solid #e2e8f0;">Forventet antall</th>
+            <td style="border-bottom:1px solid #e2e8f0;">${escapeHtml(attendeesLabel)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 style="margin-top:24px">Tilleggsinformasjon</h2>
+      <p style="white-space:pre-line">${safeMessage || 'Ingen tilleggsinformasjon.'}</p>
+      <p>Du kan svare på denne e-posten hvis du har spørsmål eller ønsker å endre noe.</p>
+    `;
+
+    return {
+      to: email,
+      from: 'booking@finsrud.cloud',
+      subject: `Vi har mottatt bookingforespørselen din: ${eventType}`,
+      text: [
+        `Hei ${name}!`,
+        '',
+        'Vi bekrefter at vi har mottatt bookingforespørselen din for Bjørkvang.',
+        'Styret må godkjenne reservasjonen før den er endelig bekreftet. Vi tar kontakt så snart den er behandlet.',
+        '',
+        'Oppsummering:',
+        ...summaryLines,
+        '',
+        'Ta gjerne kontakt om du har spørsmål eller endringer.'
+      ].join('\n'),
+      html
+    };
+  };
+
+  const postEmailPayload = async (payload) => {
     console.log('Sender payload:', payload);
 
     const response = await fetch(BOOKING_EMAIL_ENDPOINT, {
@@ -180,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('Respons body:', text);
 
     if (!response.ok) {
-      throw new Error(`Kunne ikke sende bookingforespørselen. (${response.status})`);
+      throw new Error(`Kunne ikke sende e-posten. (${response.status})`);
     }
 
     if (!text) {
@@ -193,6 +292,27 @@ document.addEventListener('DOMContentLoaded', function () {
       console.warn('Kunne ikke tolke respons som JSON:', error);
       return {};
     }
+  };
+
+  async function sendBookingEmail(bookingDetails, recipients = []) {
+    const adminPayload = buildAdminEmailPayload(bookingDetails, recipients);
+
+    console.log('Sender bookingdata:', bookingDetails);
+
+    const adminResponse = await postEmailPayload(adminPayload);
+
+    let customerResponse = null;
+
+    try {
+      const customerPayload = buildCustomerEmailPayload(bookingDetails);
+      if (customerPayload) {
+        customerResponse = await postEmailPayload(customerPayload);
+      }
+    } catch (error) {
+      console.warn('Kunne ikke sende bekreftelse til kunde:', error);
+    }
+
+    return { admin: adminResponse, customer: customerResponse };
   }
   
 
