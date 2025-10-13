@@ -66,6 +66,34 @@ app.http('bookingRequest', {
                 html,
             });
 
+            const confirmationSubject = 'Vi har mottatt bookingforespørselen din';
+            const confirmationHtml = `
+                <p>Hei ${booking.requesterName},</p>
+                <p>Takk for din forespørsel om å booke Bjørkvang.</p>
+                <p>Her er en oppsummering av hva du har sendt inn:</p>
+                <ul>
+                    <li><strong>Dato:</strong> ${booking.date}</li>
+                    <li><strong>Tid:</strong> ${booking.time}</li>
+                    <li><strong>Melding:</strong> ${booking.message || 'Ingen melding oppgitt.'}</li>
+                </ul>
+                <p>Styret vil se gjennom forespørselen og ta kontakt med deg så snart som mulig.</p>
+                <p>Vennlig hilsen<br/>Bjørkvang</p>
+            `;
+
+            const confirmationText = `Hei ${booking.requesterName},\n\nTakk for din forespørsel om å booke Bjørkvang.\n\nOppsummering av forespørselen:\n- Dato: ${booking.date}\n- Tid: ${booking.time}\n- Melding: ${booking.message || 'Ingen melding oppgitt.'}\n\nStyret vil ta kontakt med deg så snart som mulig.\n\nVennlig hilsen\nBjørkvang`;
+
+            try {
+                await sendEmail({
+                    to: booking.requesterEmail,
+                    from,
+                    subject: confirmationSubject,
+                    text: confirmationText,
+                    html: confirmationHtml,
+                });
+            } catch (error) {
+                context.log.error('Failed to send booking confirmation email to requester', error);
+            }
+
             context.log(`Stored booking ${booking.id} and notified board.`);
             return createJsonResponse(202, {
                 id: booking.id,
