@@ -2,7 +2,7 @@
   "name": "bjorkvang-functions",
   "version": "1.0.0",
   "description": "Azure Functions v4 for Bjorkvang services",
-  "main": "src/functions/index.js",
+  "main": "src/index.js",
   "scripts": {
     "start": "func start",
     "test": "echo \"No tests yet...\""

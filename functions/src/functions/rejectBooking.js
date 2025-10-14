@@ -1,7 +1,7 @@
 const { app } = require('@azure/functions');
-const { sendEmail } = require('../shared/email');
-const { createHtmlResponse, createJsonResponse, parseBody } = require('../shared/http');
-const { getBooking, updateBookingStatus } = require('../shared/bookingStore');
+const { sendEmail } = require('../../shared/email');
+const { createHtmlResponse, createJsonResponse, parseBody } = require('../../shared/http');
+const { getBooking, updateBookingStatus } = require('../../shared/bookingStore');
 
 /**
  * Reject a booking via link or API call. Accepts optional message via POST.

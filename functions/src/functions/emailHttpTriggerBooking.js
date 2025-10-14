@@ -1,6 +1,6 @@
 const { app } = require('@azure/functions');
-const { sendEmail } = require('../shared/email');
-const { createJsonResponse, parseBody } = require('../shared/http');
+const { sendEmail } = require('../../shared/email');
+const { createJsonResponse, parseBody } = require('../../shared/http');
 
 app.http('emailHttpTriggerBooking', {
     methods: ['POST', 'OPTIONS'],
