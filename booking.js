@@ -520,45 +520,45 @@ document.addEventListener('DOMContentLoaded', function () {
     const seedEvents = [
       {
         title: 'Basar – hele lokalet',
-        start: '2024-11-01T00:00:00',
-        end: '2024-11-03T00:00:00',
+        start: '2024-11-02T14:00:00',
+        end: '2024-11-03T17:00:00',
         extendedProps: {
           eventType: 'Basar',
           message:
-            'Helgøens Vel arrangerer åpen basar denne helgen. Hele salen er reservert til felles og offentlig arrangement.',
+            'Helgøens Vel arrangerer åpen basar denne helgen. Åpningstider: 14.00–17.00 både lørdag og søndag. Trekningen starter søndag kl. 17.00, og hele salen er reservert til felles og offentlig arrangement.',
           spaces: ['Hele lokalet'],
           services: [],
-          duration: 48,
+          duration: 6,
           status: 'confirmed',
           createdAt: '2024-06-01T00:00:00.000Z'
         }
       },
       {
         title: 'Basar 1. november 2025',
-        start: '2025-11-01T10:00:00',
-        end: '2025-11-01T16:00:00',
+        start: '2025-11-01T14:00:00',
+        end: '2025-11-01T17:00:00',
         extendedProps: {
           eventType: 'Basar',
           message:
-            'Åpen bygdebasar med aktiviteter, kafé og loddsalg. Lokalet er reservert til fellesarrangement gjennom hele dagen.',
+            'Åpen bygdebasar med aktiviteter, kafé og loddsalg. Åpent 14.00–17.00 lørdag, og hele lokalet er reservert til fellesarrangement.',
           spaces: ['Hele lokalet'],
           services: ['Frivillige'],
-          duration: 6,
+          duration: 3,
           status: 'confirmed',
           createdAt: '2025-05-15T00:00:00.000Z'
         }
       },
       {
         title: 'Basar 2. november 2025',
-        start: '2025-11-02T11:00:00',
-        end: '2025-11-02T15:00:00',
+        start: '2025-11-02T14:00:00',
+        end: '2025-11-02T17:00:00',
         extendedProps: {
           eventType: 'Basar',
           message:
-            'Søndagsfinale for basarhelgen med trekninger, kaffekos og aktiviteter for alle generasjoner.',
+            'Søndagsfinale for basarhelgen med trekninger, kaffekos og aktiviteter for alle generasjoner. Åpent 14.00–17.00, og trekningen starter søndag kl. 17.00.',
           spaces: ['Hele lokalet'],
           services: ['Frivillige'],
-          duration: 4,
+          duration: 3,
           status: 'confirmed',
           createdAt: '2025-05-15T00:00:00.000Z'
         }
