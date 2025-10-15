@@ -538,6 +538,80 @@ button {
     padding: clamp(2.5rem, 5vw, 4rem) 0;
 }
 
+.upcoming-activities {
+    background: linear-gradient(120deg, rgba(37, 120, 90, 0.08) 0%, rgba(255, 255, 255, 0.6) 100%);
+}
+
+.upcoming-activities__inner {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3.5rem);
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+}
+
+.upcoming-activities__intro {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 48ch;
+}
+
+.upcoming-activities__intro .eyebrow {
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--brand-600);
+}
+
+.upcoming-activities__intro h2 {
+    margin: 0;
+    font-size: clamp(1.8rem, 2vw + 1.2rem, 2.4rem);
+    color: var(--brand-600);
+    font-family: 'Playfair Display', Georgia, serif;
+}
+
+.upcoming-activities__list {
+    display: grid;
+    gap: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+.upcoming-activity {
+    display: grid;
+    gap: 1rem;
+    padding: clamp(1.4rem, 3vw, 1.8rem);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+}
+
+.upcoming-activity__date {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: baseline;
+    font-weight: 600;
+    color: var(--brand-600);
+}
+
+.upcoming-activity__date time {
+    font-size: 1.05rem;
+}
+
+.upcoming-activity__time {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.upcoming-activity__content h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+}
+
+.upcoming-activity__content p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
 .booking-form-section,
 #booking-form {
     scroll-margin-top: 5rem;
@@ -915,6 +989,18 @@ button {
 
 /* Booking */
 
+.booking-calendar-section {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(37, 120, 90, 0.08) 100%);
+}
+
+.booking-calendar-section .section-heading {
+    margin-bottom: 1.5rem;
+}
+
+.booking-calendar-section .section-heading p {
+    margin-bottom: 0;
+}
+
 .booking-layout {
     display: grid;
     gap: clamp(1.5rem, 3vw, 2.75rem);
@@ -986,6 +1072,11 @@ button {
     background: rgba(213, 93, 93, 0.75);
 }
 
+.legend-dot--basar {
+    background: rgba(37, 120, 90, 0.65);
+    box-shadow: 0 0 0 3px rgba(37, 120, 90, 0.15);
+}
+
 .availability-list {
     margin: 0;
     padding: 0;
@@ -1022,7 +1113,7 @@ button {
 }
 
 #calendar {
-    margin: 2.5rem 0;
+    margin: clamp(1.25rem, 3vw, 2rem) 0;
     padding: 1.5rem;
     background: var(--surface);
     border-radius: var(--radius-lg);
@@ -1098,6 +1189,12 @@ button {
 
 #calendar .fc-event.fc-event--blocked {
     background: #c96868;
+}
+
+#calendar .fc-event.fc-event--basar {
+    background: linear-gradient(135deg, rgba(37, 120, 90, 0.9), rgba(47, 143, 106, 0.95));
+    color: #f6fdf9;
+    box-shadow: inset 0 0 0 1px rgba(20, 62, 46, 0.35);
 }
 
 form {
@@ -1489,6 +1586,14 @@ button[type="submit"] {
 /* Responsive adjustments */
 
 @media (max-width: 768px) {
+    .upcoming-activities__inner {
+        grid-template-columns: 1fr;
+    }
+
+    .upcoming-activities__intro {
+        max-width: none;
+    }
+
     .hero-inner {
         grid-template-columns: 1fr;
         gap: 2.5rem;
