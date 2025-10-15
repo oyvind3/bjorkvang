@@ -65,6 +65,52 @@
     </section>
 
     <main class="page-main" id="main-content">
+        <section class="page-section booking-calendar-section" aria-labelledby="booking-calendar-heading">
+            <div class="container booking-layout">
+                <div class="booking-main">
+                    <div class="section-heading">
+                        <h2 id="booking-calendar-heading">Finn ledige datoer</h2>
+                        <p>Kalenderen viser planlagte aktiviteter og reserverte tidspunkter. Markér en dato for å fylle ut skjemaet automatisk.</p>
+                    </div>
+                    <div id="calendar" aria-live="polite"></div>
+                    <p class="calendar-note">Åpne dagene for å se detaljer om arrangementene. Dobbeltbooking hindres automatisk.</p>
+                    <div class="calendar-cta">
+                        <a class="button ghost" href="#booking-form">Gå til forespørselsskjema</a>
+                    </div>
+                </div>
+                <aside class="booking-aside" aria-labelledby="availability-heading">
+                    <h3 id="availability-heading">Slik leser du kalenderen</h3>
+                    <div class="availability-legend" role="list">
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--available" aria-hidden="true"></span>
+                            <span>Grønn bakgrunn betyr ledig dato.</span>
+                        </div>
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--pending" aria-hidden="true"></span>
+                            <span>Gule felt viser forespørsler som venter på bekreftelse.</span>
+                        </div>
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--unavailable" aria-hidden="true"></span>
+                            <span>Rød markering betyr at datoen er reservert eller stengt.</span>
+                        </div>
+                        <div class="legend-item" role="listitem">
+                            <span class="legend-dot legend-dot--basar" aria-hidden="true"></span>
+                            <span>Basar-arrangement markeres i grønnblått felt.</span>
+                        </div>
+                    </div>
+                    <ul class="availability-list">
+                        <li><strong>Marker en dato</strong> for å fylle ut skjemaet automatisk.</li>
+                        <li><strong>Trykk på arrangement</strong> for å se detaljer som tid og type.</li>
+                    </ul>
+                    <div class="contact-card">
+                        <h4>Trenger du hjelp?</h4>
+                        <p>Har du spesielle behov for teknikk eller rigg, gi beskjed til styret så finner vi løsningen sammen. Forespørselen du sender i skjemaet deles automatisk med bookingansvarlig.</p>
+                        <a class="button ghost" href="mailto:helgoens.vel@example.com">Kontakt bookingansvarlig</a>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
         <section class="page-section booking-form-section" id="booking-form-section" aria-labelledby="booking-form-heading">
             <div class="container">
                 <div class="section-heading">
@@ -194,11 +240,60 @@
             </div>
         </section>
 
+        <section class="page-section" aria-labelledby="inventory-heading">
+            <div class="container">
+                <div class="section-heading">
+                    <h2 id="inventory-heading">Inventar og utstyr</h2>
+                    <p>Her legger vi inn detaljene om hva som følger med ved leie. Bruk listen under til å fylle ut kjøkkenutstyr, bord og stoler og annet inventar.</p>
+                </div>
+                <div class="inventory-grid">
+                    <article class="inventory-card">
+                        <h3>Kjøkkenutstyr</h3>
+                        <ul>
+                            <li><strong>Oppdateres:</strong> Liste over komfyrer, ovner og oppvaskmaskin.</li>
+                            <li><strong>Legg til:</strong> Antall kjeler, stekepanner, serveringsfat og kaffetraktere.</li>
+                            <li><strong>Noter:</strong> Eventuelle spesialmaskiner (kjøleskap, fryser, isbitmaskin).</li>
+                        </ul>
+                    </article>
+                    <article class="inventory-card">
+                        <h3>Bord og stoler</h3>
+                        <ul>
+                            <li><strong>Oppdateres:</strong> Hvor mange runde og rektangulære bord som er tilgjengelige.</li>
+                            <li><strong>Legg til:</strong> Antall stoler, barstoler og eventuelle barnestoler.</li>
+                            <li><strong>Noter:</strong> Lagerplassering og hvordan bord/stoler lagres etter bruk.</li>
+                        </ul>
+                    </article>
+                    <article class="inventory-card">
+                        <h3>Annet inventar</h3>
+                        <ul>
+                            <li><strong>Oppdateres:</strong> Tekniske hjelpemidler som projektor, lydanlegg og mikrofoner.</li>
+                            <li><strong>Legg til:</strong> Dekorasjoner, duker og lysutstyr som kan lånes.</li>
+                            <li><strong>Noter:</strong> Renholdsutstyr, utendørs møbler og annet praktisk inventar.</li>
+                        </ul>
+                    </article>
+                </div>
+                <p class="inventory-footnote">Marker denne teksten når informasjonen er på plass, eller erstatt med lenke til egen inventarliste.</p>
+            </div>
+        </section>
+
+        <section class="page-section" aria-labelledby="reservation-overview-heading">
+            <div class="container">
+                <div class="section-heading">
+                    <h2 id="reservation-overview-heading">Kommende reservasjoner</h2>
+                    <p>Se hvilke datoer som allerede er holdt av gjennom Helgøens Vel.</p>
+                </div>
+                <div class="reservation-overview" aria-live="polite">
+                    <p id="reservation-empty" class="reservation-empty">Ingen reservasjoner er registrert enda. Når du sender en forespørsel, dukker den opp her og i kalenderen.</p>
+                    <ul id="reservation-list" class="reservation-list"></ul>
+                </div>
+            </div>
+        </section>
+
         <section class="page-section space-gallery-section" aria-labelledby="space-gallery-heading">
             <div class="container">
                 <div class="section-heading">
                     <h2 id="space-gallery-heading">Velg rommet som passer</h2>
-                    <p>Få et glimt av lokalene før du sender forespørselen. Alle rom kan kombineres for større arrangementer.</p>
+                    <p>Få et glimt av lokalene når du planlegger. Alle rom kan kombineres for større arrangementer.</p>
                 </div>
                 <div class="space-gallery" role="list">
                     <article class="space-card" role="listitem">
@@ -258,96 +353,6 @@
                             <p class="placeholder-note">Eksempelbilde fra Unsplash. Oppdater teksten med liste over utstyr og kapasitet.</p>
                         </div>
                     </article>
-                </div>
-            </div>
-        </section>
-
-        <section class="page-section" aria-labelledby="inventory-heading">
-            <div class="container">
-                <div class="section-heading">
-                    <h2 id="inventory-heading">Inventar og utstyr</h2>
-                    <p>Her legger vi inn detaljene om hva som følger med ved leie. Bruk listen under til å fylle ut kjøkkenutstyr, bord og stoler og annet inventar.</p>
-                </div>
-                <div class="inventory-grid">
-                    <article class="inventory-card">
-                        <h3>Kjøkkenutstyr</h3>
-                        <ul>
-                            <li><strong>Oppdateres:</strong> Liste over komfyrer, ovner og oppvaskmaskin.</li>
-                            <li><strong>Legg til:</strong> Antall kjeler, stekepanner, serveringsfat og kaffetraktere.</li>
-                            <li><strong>Noter:</strong> Eventuelle spesialmaskiner (kjøleskap, fryser, isbitmaskin).</li>
-                        </ul>
-                    </article>
-                    <article class="inventory-card">
-                        <h3>Bord og stoler</h3>
-                        <ul>
-                            <li><strong>Oppdateres:</strong> Hvor mange runde og rektangulære bord som er tilgjengelige.</li>
-                            <li><strong>Legg til:</strong> Antall stoler, barstoler og eventuelle barnestoler.</li>
-                            <li><strong>Noter:</strong> Lagerplassering og hvordan bord/stoler lagres etter bruk.</li>
-                        </ul>
-                    </article>
-                    <article class="inventory-card">
-                        <h3>Annet inventar</h3>
-                        <ul>
-                            <li><strong>Oppdateres:</strong> Tekniske hjelpemidler som projektor, lydanlegg og mikrofoner.</li>
-                            <li><strong>Legg til:</strong> Dekorasjoner, duker og lysutstyr som kan lånes.</li>
-                            <li><strong>Noter:</strong> Renholdsutstyr, utendørs møbler og annet praktisk inventar.</li>
-                        </ul>
-                    </article>
-                </div>
-                <p class="inventory-footnote">Marker denne teksten når informasjonen er på plass, eller erstatt med lenke til egen inventarliste.</p>
-            </div>
-        </section>
-
-        <section class="page-section">
-            <div class="container booking-layout">
-                <div class="booking-main">
-                    <div class="section-heading">
-                        <h2>Hold av ønsket tidspunkt</h2>
-                        <p>Kalenderen viser hvilke datoer som allerede er holdt av. Forespørselen du legger inn lagres lokalt i nettleseren og vises for andre besøkende.</p>
-                    </div>
-                    <div id="calendar" aria-live="polite"></div>
-                    <p class="calendar-note">Velg dato direkte i kalenderen for å fylle ut skjemaet raskere. Dobbeltbooking hindres automatisk.</p>
-                    <div class="calendar-cta">
-                        <a class="button ghost" href="#booking-form">Gå til forespørselsskjema</a>
-                    </div>
-                </div>
-                <aside class="booking-aside" aria-labelledby="availability-heading">
-                    <h3 id="availability-heading">Slik leser du kalenderen</h3>
-                    <div class="availability-legend" role="list">
-                        <div class="legend-item" role="listitem">
-                            <span class="legend-dot legend-dot--available" aria-hidden="true"></span>
-                            <span>Grønn bakgrunn betyr ledig dato.</span>
-                        </div>
-                        <div class="legend-item" role="listitem">
-                            <span class="legend-dot legend-dot--pending" aria-hidden="true"></span>
-                            <span>Gule felt viser forespørsler som venter på bekreftelse.</span>
-                        </div>
-                        <div class="legend-item" role="listitem">
-                            <span class="legend-dot legend-dot--unavailable" aria-hidden="true"></span>
-                            <span>Rød markering betyr at datoen er reservert eller stengt.</span>
-                        </div>
-                    </div>
-                    <ul class="availability-list">
-                        <li><strong>Marker en dato</strong> for å fylle ut skjemaet automatisk.</li>
-                    </ul>
-                    <div class="contact-card">
-                        <h4>Trenger du hjelp?</h4>
-                        <p>Har du spesielle behov for teknikk eller rigg, gi beskjed til styret så finner vi løsningen sammen. Forespørselen du sender i skjemaet deles automatisk med bookingansvarlig.</p>
-                        <a class="button ghost" href="mailto:helgoens.vel@example.com">Kontakt bookingansvarlig</a>
-                    </div>
-                </aside>
-            </div>
-        </section>
-
-        <section class="page-section" aria-labelledby="reservation-overview-heading">
-            <div class="container">
-                <div class="section-heading">
-                    <h2 id="reservation-overview-heading">Kommende reservasjoner</h2>
-                    <p>Se hvilke datoer som allerede er holdt av gjennom Helgøens Vel.</p>
-                </div>
-                <div class="reservation-overview" aria-live="polite">
-                    <p id="reservation-empty" class="reservation-empty">Ingen reservasjoner er registrert enda. Når du sender en forespørsel, dukker den opp her og i kalenderen.</p>
-                    <ul id="reservation-list" class="reservation-list"></ul>
                 </div>
             </div>
         </section>

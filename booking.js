@@ -532,6 +532,36 @@ document.addEventListener('DOMContentLoaded', function () {
           status: 'confirmed',
           createdAt: '2024-06-01T00:00:00.000Z'
         }
+      },
+      {
+        title: 'Basar 1. november 2025',
+        start: '2025-11-01T10:00:00',
+        end: '2025-11-01T16:00:00',
+        extendedProps: {
+          eventType: 'Basar',
+          message:
+            'Åpen bygdebasar med aktiviteter, kafé og loddsalg. Lokalet er reservert til fellesarrangement gjennom hele dagen.',
+          spaces: ['Hele lokalet'],
+          services: ['Frivillige'],
+          duration: 6,
+          status: 'confirmed',
+          createdAt: '2025-05-15T00:00:00.000Z'
+        }
+      },
+      {
+        title: 'Basar 2. november 2025',
+        start: '2025-11-02T11:00:00',
+        end: '2025-11-02T15:00:00',
+        extendedProps: {
+          eventType: 'Basar',
+          message:
+            'Søndagsfinale for basarhelgen med trekninger, kaffekos og aktiviteter for alle generasjoner.',
+          spaces: ['Hele lokalet'],
+          services: ['Frivillige'],
+          duration: 4,
+          status: 'confirmed',
+          createdAt: '2025-05-15T00:00:00.000Z'
+        }
       }
     ];
 
@@ -689,7 +719,12 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       eventClassNames: function (arg) {
         const status = normaliseStatus(arg.event.extendedProps?.status, 'pending');
-        return [`fc-event--${status}`];
+        const classes = [`fc-event--${status}`];
+        const eventType = (arg.event.extendedProps?.eventType || '').toLowerCase();
+        if (eventType.includes('basar')) {
+          classes.push('fc-event--basar');
+        }
+        return classes;
       },
       dateClick: function (info) {
         if (dateInput) {
