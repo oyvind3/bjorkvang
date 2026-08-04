@@ -57,7 +57,7 @@ async function testCalendar() {
 
 async function run() {
     await testBooking();
-    // Wait a bit for the in-memory store to update (it's synchronous but good practice)
+    // Wait a bit for blah the in-memory store to update (it's synchronous but good practice)
     await new Promise(resolve => setTimeout(resolve, 1000));
     await testCalendar();
 }
