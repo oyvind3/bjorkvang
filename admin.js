@@ -19,6 +19,17 @@ function getAdminKey() {
     return sessionStorage.getItem('admin_api_key') || '';
 }
 
+// Notification links land on /admin?contract=<id>. Require admin login first,
+// then continue to the requested contract in the same tab. The signing key
+// stays in sessionStorage instead of being included in the notification URL.
+function openContractFromNotification() {
+    const id = new URLSearchParams(window.location.search).get('contract');
+    if (!id) return false;
+
+    window.location.replace(`/leieavtale?id=${encodeURIComponent(id)}&mode=admin`);
+    return true;
+}
+
 // ---------- Reschedule modal ----------
 
 function injectRescheduleModal() {
@@ -140,6 +151,7 @@ async function checkLogin() {
             document.getElementById('dashboard').classList.remove('hidden');
             sessionStorage.setItem('admin_auth', 'true');
             sessionStorage.setItem('admin_api_key', input);
+            if (openContractFromNotification()) return;
             initFilterPanel();
             loadDashboard();
         } else {
@@ -167,7 +179,13 @@ function logout() {
 }
 
 // Check session on load
-if (sessionStorage.getItem('admin_auth') === 'true') {
+// Older sessions may have the UI flag without the API key. Force a fresh
+// login in that case so a notification cannot continue with invalid auth.
+if (sessionStorage.getItem('admin_auth') === 'true' && !getAdminKey()) {
+    sessionStorage.removeItem('admin_auth');
+}
+
+if (sessionStorage.getItem('admin_auth') === 'true' && !openContractFromNotification()) {
     document.getElementById('login-overlay').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
     initFilterPanel();

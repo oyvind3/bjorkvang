@@ -75,6 +75,7 @@ const buildSmsMessage = (type, vars = {}) => {
     const requester = normalizeWhitespace(vars.requesterName || 'Kunde');
     const attendees = Number.isFinite(Number(vars.attendees)) ? Number(vars.attendees) : null;
     const contractLink = normalizeWhitespace(vars.contractLink || '');
+    const adminLink = normalizeWhitespace(vars.adminLink || '');
     const bankAccount = normalizeWhitespace(vars.bankAccount || '');
 
     switch (type) {
@@ -84,9 +85,14 @@ const buildSmsMessage = (type, vars = {}) => {
             return enforceSms160([c1, c2]);
         }
         case 'admin.tenantSigned': {
-            const c1 = `Leieavtale signert av ${requester}, ${date}. Signer som utleier: ${contractLink} ${SMS_SIGNATURE}`;
-            const c2 = `Leieavtale signert av ${requester}, ${date}. Sjekk admin for signering. ${SMS_SIGNATURE}`;
-            return enforceSms160([c1, c2]);
+            const c1 = adminLink
+                ? `Leieavtale signert av ${requester}, ${date}. Signer som utleier: ${adminLink} ${SMS_SIGNATURE}`
+                : `Leieavtale signert av ${requester}, ${date}. Sjekk admin for signering. ${SMS_SIGNATURE}`;
+            const c2 = adminLink
+                ? `Signer som utleier: ${adminLink} ${SMS_SIGNATURE}`
+                : c1;
+            const c3 = `Leieavtale signert av ${requester}, ${date}. Sjekk admin for signering. ${SMS_SIGNATURE}`;
+            return enforceSms160([c1, c2, c3]);
         }
         case 'admin.depositPaid': {
             const amountPart = amount ? `, ${amount}` : '';
