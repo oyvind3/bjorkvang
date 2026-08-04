@@ -2,7 +2,7 @@ const { app } = require('@azure/functions');
 const { addContractSignature, getBooking, updateBookingFields } = require('../../../shared/cosmosDb');
 const { createJsonResponse, requireAdminKey } = require('../../../shared/http');
 const { sendEmail } = require('../../../shared/email');
-const { sendSms, sendSmsToAdminGroup, buildSmsMessage } = require('../../../shared/sms');
+const { sendSms, sendSmsToAdminGroup, buildSmsMessage, deriveSmsSigningToken } = require('../../../shared/sms');
 const { generateEmailHtml } = require('../../../shared/emailTemplate');
 const vipps = require('../../../shared/vipps');
 
@@ -28,8 +28,13 @@ app.http('signBooking', {
                     return createJsonResponse(404, { message: 'Booking not found' }, request);
                 }
                 // Only enforce token if one is stored (backward-compat with old bookings)
-                if (existingBooking.signingToken) {
-                    if (!signingToken || signingToken !== existingBooking.signingToken) {
+                const expectedTokens = [
+                    existingBooking.signingToken,
+                    existingBooking.smsSigningToken,
+                    deriveSmsSigningToken(existingBooking.signingToken),
+                ].filter(Boolean);
+                if (expectedTokens.length > 0) {
+                    if (!signingToken || !expectedTokens.includes(signingToken)) {
                         return createJsonResponse(403, { message: 'Ugyldig signeringstoken. Be om ny signeringslenke fra Bjørkvang.' }, request);
                     }
                 }

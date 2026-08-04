@@ -1,6 +1,6 @@
 const { app } = require('@azure/functions');
 const { sendEmail } = require('../../../shared/email');
-const { sendSms, buildSmsMessage } = require('../../../shared/sms');
+const { sendSms, buildSmsMessage, deriveSmsSigningToken } = require('../../../shared/sms');
 const { createJsonResponse, parseBody } = require('../../../shared/http');
 const { getBooking } = require('../../../shared/cosmosDb');
 const { generateEmailHtml } = require('../../../shared/emailTemplate');
@@ -13,6 +13,8 @@ app.http('sendReminder', {
         try {
             const body = await parseBody(request);
             const { id, comment } = body;
+            const requestedChannel = String(body?.channel || 'both').toLowerCase();
+            const channel = ['email', 'sms', 'both'].includes(requestedChannel) ? requestedChannel : 'both';
 
             if (!id) {
                 return createJsonResponse(400, { error: 'Missing booking id.' });
@@ -44,7 +46,8 @@ app.http('sendReminder', {
             }
 
             const websiteUrl = process.env.WEBSITE_URL || 'https://bjorkvang.org';
-            const contractLink = `${websiteUrl}/leieavtale.html?id=${booking.id}`;
+            const reminderToken = booking.smsSigningToken || deriveSmsSigningToken(booking.signingToken);
+            const contractLink = `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(booking.id)}${reminderToken ? `&signingToken=${encodeURIComponent(reminderToken)}` : ''}`;
             const bankAccount = process.env.BANK_ACCOUNT || '1822.40.12345';
 
             const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (m) => ({
@@ -150,27 +153,90 @@ app.http('sendReminder', {
                     });
             }
 
-            const html = generateEmailHtml({
-                title: subject,
-                content: htmlContent,
-                action: actionButton,
-                previewText
-            });
+            const wantsEmail = channel !== 'sms';
+            const wantsSms = channel !== 'email';
+            const canEmail = Boolean(booking.requesterEmail && String(booking.requesterEmail).trim());
+            const canSms = Boolean(booking.phone && String(booking.phone).trim());
 
-            await sendEmail({
-                to: booking.requesterEmail,
-                from: process.env.DEFAULT_FROM_ADDRESS,
-                subject,
-                html,
-                text: smsBody,
-            });
-
-            if (booking.phone) {
-                await sendSms({ to: booking.phone, body: smsBody }, context);
+            if (channel === 'sms' && !canSms) {
+                return createJsonResponse(400, { error: 'Booking mangler telefonnummer for SMS-påminnelse.' });
             }
 
-            context.info(`sendReminder: type=${reminderType}, booking=${id}`);
-            return createJsonResponse(200, { message: 'Reminder sent', type: reminderType });
+            if (channel === 'email' && !canEmail) {
+                return createJsonResponse(400, { error: 'Booking mangler e-postadresse for e-postpåminnelse.' });
+            }
+
+            if (!canEmail && !canSms) {
+                return createJsonResponse(400, { error: 'Booking mangler e-post og telefonnummer for påminnelse.' });
+            }
+
+            let emailSent = false;
+            let smsSent = false;
+            let emailError = null;
+            let smsError = null;
+
+            if (wantsEmail && canEmail) {
+                try {
+                    const html = generateEmailHtml({
+                        title: subject,
+                        content: htmlContent,
+                        action: actionButton,
+                        previewText
+                    });
+
+                    await sendEmail({
+                        to: booking.requesterEmail,
+                        from: process.env.DEFAULT_FROM_ADDRESS,
+                        subject,
+                        html,
+                        text: smsBody,
+                    });
+                    emailSent = true;
+                } catch (err) {
+                    emailError = err.message;
+                    context.error('sendReminder: Failed to send reminder email', {
+                        bookingId: id,
+                        reminderType,
+                        error: err.message
+                    });
+                }
+            }
+
+            if (wantsSms && canSms) {
+                try {
+                    const smsResult = await sendSms({ to: booking.phone, body: smsBody }, context);
+                    smsSent = Boolean(smsResult);
+                    if (!smsSent) {
+                        smsError = 'SMS kunne ikke sendes.';
+                    }
+                } catch (err) {
+                    smsError = err.message;
+                    context.error('sendReminder: Failed to send reminder SMS', {
+                        bookingId: id,
+                        reminderType,
+                        error: err.message
+                    });
+                }
+            }
+
+            if (!emailSent && wantsEmail && !smsSent) {
+                return createJsonResponse(502, {
+                    error: 'Påminnelsen kunne ikke sendes.',
+                    ...(emailError ? { emailError } : {}),
+                    ...(smsError ? { smsError } : {})
+                });
+            }
+
+            context.info(`sendReminder: type=${reminderType}, channel=${channel}, booking=${id}, emailSent=${emailSent}, smsSent=${smsSent}`);
+            return createJsonResponse(200, {
+                message: 'Reminder sent',
+                type: reminderType,
+                channel,
+                emailSent,
+                smsSent,
+                ...(emailError ? { emailError } : {}),
+                ...(smsError ? { smsError } : {})
+            });
 
         } catch (error) {
             context.error('Error sending reminder:', error);

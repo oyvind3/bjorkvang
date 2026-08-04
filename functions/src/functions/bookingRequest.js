@@ -1,7 +1,7 @@
 const { app } = require('@azure/functions');
 const crypto = require('crypto');
 const { sendEmail } = require('../../shared/email');
-const { sendSms, sendSmsToAdminGroup, buildSmsMessage } = require('../../shared/sms');
+const { sendSms, sendSmsToAdminGroup, buildSmsMessage, deriveSmsSigningToken } = require('../../shared/sms');
 const { createJsonResponse, parseBody, resolveBaseUrl } = require('../../shared/http');
 const { saveBooking, listBookings } = require('../../shared/cosmosDb');
 const { generateEmailHtml } = require('../../shared/emailTemplate');
@@ -192,6 +192,8 @@ app.http('bookingRequest', {
             // Convert to øre for storage
             paymentAmount = paymentAmount * 100;
 
+            const signingToken = crypto.randomBytes(32).toString('hex');
+
             // Create booking with sanitized inputs
             const booking = await saveBooking({
                 id: bookingId,
@@ -217,7 +219,8 @@ app.http('bookingRequest', {
                 totalAmount: totalAmount || paymentAmount / 100,
                 paymentAmount: paymentAmount,
                 cateringContact: cateringContact === true || cateringContact === 'true',
-                signingToken: crypto.randomBytes(32).toString('hex'),
+                signingToken,
+                smsSigningToken: deriveSmsSigningToken(signingToken),
                 adminCreated: adminCreated === true,
                 suppressEmails: suppressEmails || false,
                 // External tracking: pre-set fields if admin indicated these were handled outside the system

@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 // Max 11 chars, ASCII only (A-Za-z0-9) — Norwegian Ø/Æ/Å are not allowed in Twilio sender IDs
 const SENDER_ID = process.env.SMS_SENDER_ID || 'Bjorkvang';
 const SMS_MAX_LENGTH = 160;
@@ -37,6 +39,12 @@ const firstName = (fullName) => {
 const shortRef = (bookingId) => {
     const cleaned = String(bookingId || '').replace(/[^a-zA-Z0-9]/g, '');
     return cleaned ? cleaned.slice(0, 8).toUpperCase() : '';
+};
+
+const deriveSmsSigningToken = (signingToken, length = 8) => {
+    const token = String(signingToken || '').trim();
+    if (!token) return '';
+    return crypto.createHash('sha256').update(token).digest('hex').slice(0, length);
 };
 
 const hardLimit = (text, maxLength = SMS_MAX_LENGTH) => {
@@ -121,13 +129,13 @@ const buildSmsMessage = (type, vars = {}) => {
             return enforceSms160([c1, c2]);
         }
         case 'customer.bookingApproved': {
-            const c1 = `Hei ${fName}! Bookingen ${date} er godkjent. Signer leieavtalen her: ${contractLink} ${SMS_SIGNATURE}`;
-            const c2 = `Hei ${fName}! Bookingen ${date} er godkjent. Signer avtalen via lenken i e-posten. ${SMS_SIGNATURE}`;
+            const c1 = `Hei ${fName}! Bookingen er godkjent. Signer leieavtalen: ${contractLink}`;
+            const c2 = `Hei ${fName}! Bookingen er godkjent. Avtale: ${contractLink}`;
             return enforceSms160([c1, c2]);
         }
         case 'customer.reminderSigning': {
-            const c1 = `Hei ${fName}! Påminnelse: Leieavtalen for ${date} mangler signatur. Signer her: ${contractLink} ${SMS_SIGNATURE}`;
-            const c2 = `Hei ${fName}! Påminnelse: Leieavtalen for ${date} mangler signatur. Bruk lenken i e-posten. ${SMS_SIGNATURE}`;
+            const c1 = `Hei ${fName}! Leieavtalen mangler signatur. Signer her: ${contractLink}`;
+            const c2 = `Hei ${fName}! Leieavtalen mangler signatur. Avtale: ${contractLink}`;
             return enforceSms160([c1, c2]);
         }
         case 'customer.reminderDepositVipps': {
@@ -247,6 +255,7 @@ const sendSms = async (options, context = console) => {
 module.exports = {
     SMS_MAX_LENGTH,
     buildSmsMessage,
+    deriveSmsSigningToken,
     enforceSms160,
     sendSms,
     normalizeNorwegianPhone,

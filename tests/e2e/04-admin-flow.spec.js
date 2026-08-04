@@ -52,6 +52,24 @@ test.describe('TC-19 · Board notification email is triggered on new booking', (
   });
 });
 
+test.describe('TC-19b · Manual signing reminder can be sent as SMS only', () => {
+  test('POST /api/booking/remind accepts channel=sms for signing reminders', async ({ request }) => {
+    const id = await createBooking(request);
+
+    const res = await request.post(`${API_BASE}/booking/remind`, {
+      data: {
+        id,
+        channel: 'sms',
+      },
+    });
+
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body.type).toBe('signing');
+    expect(body.channel).toBe('sms');
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('TC-20 · Approve booking – bank payment path', () => {
   test('approved booking appears as confirmed on the public calendar', async ({ request }) => {

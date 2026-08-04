@@ -1,6 +1,6 @@
 const { app } = require('@azure/functions');
 const { sendEmail } = require('../../../shared/email');
-const { sendSms, buildSmsMessage } = require('../../../shared/sms');
+const { sendSms, buildSmsMessage, deriveSmsSigningToken } = require('../../../shared/sms');
 const { createHtmlResponse, createJsonResponse, parseBody, requireAdminKey } = require('../../../shared/http');
 const { getBooking, updateBookingStatus, updateBookingFields } = require('../../../shared/cosmosDb');
 const { generateEmailHtml } = require('../../../shared/emailTemplate');
@@ -297,10 +297,14 @@ app.http('approveBooking', {
 
                 // --- SMS til leietaker ved godkjenning ---
                 if (existingBooking.phone) {
+                    const smsSigningToken = existingBooking.smsSigningToken || deriveSmsSigningToken(existingBooking.signingToken);
+                    const smsContractLink = smsSigningToken
+                        ? `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(existingBooking.id)}&signingToken=${encodeURIComponent(smsSigningToken)}`
+                        : contractLink;
                     const approvalSmsBody = buildSmsMessage('customer.bookingApproved', {
                         requesterName: existingBooking.requesterName,
                         date: existingBooking.date,
-                        contractLink,
+                        contractLink: smsContractLink,
                     });
                     await sendSms({ to: existingBooking.phone, body: approvalSmsBody }, context);
                 }

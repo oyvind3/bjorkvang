@@ -1038,6 +1038,9 @@ function createBookingCard(booking) {
         if (!isRequesterSigned && !bookingDatePast) {
             // Signing reminder only makes sense before the event date
             approvedActions += `<button onclick="sendReminder('${booking.id}', 'signing')" class="btn-sm" style="background:#f59e0b;color:black;" title="Send signaturpåminnelse til leietaker">📄 Signaturpåminnelse</button>`;
+            if (booking.phone) {
+                approvedActions += `<button onclick="sendReminder('${booking.id}', 'signing', 'sms')" class="btn-sm" style="background:#0f766e;color:white;" title="Send signaturpåminnelse som SMS med lenke til avtalen">📱 Signatur-SMS</button>`;
+            }
         } else if (depositRequested && !depositPaid) {
             approvedActions += `<button onclick="sendReminder('${booking.id}', 'deposit')" class="btn-sm" style="background:#f59e0b;color:black;" title="Minn leietaker om å betale forhåndsbetalingen">💸 Betalingspåminnelse</button>`;
         } else if (finalInvoiceSent && !finalInvoicePaid) {
@@ -1152,15 +1155,16 @@ function copyContractLink(id) {
     navigator.clipboard.writeText(link).then(() => alert('Lenke kopiert!'));
 }
 
-async function sendReminder(id, type) {
+async function sendReminder(id, type, channel = 'both') {
     const typeLabels = {
         signing:      'Signaturpåminnelse – leietaker blir bedt om å signere leieavtalen.',
         deposit:      'Betalingspåminnelse – leietaker blir minnet om å betale forhåndsbetalingen.',
         finalInvoice: 'Sluttfakturapåminnelse – leietaker blir minnet om å betale sluttfakturaen.',
     };
     const description = typeLabels[type] || 'Generell påminnelse sendes til leietaker.';
-    const comment = prompt(`${description}\n\nVil du legge til en kommentar? (Valgfritt)`);
-    if (comment === null) return; // Cancelled
+    const isSmsOnly = channel === 'sms';
+    const comment = isSmsOnly ? '' : prompt(`${description}\n\nVil du legge til en kommentar? (Valgfritt)`);
+    if (!isSmsOnly && comment === null) return; // Cancelled
 
     try {
         const response = await fetch(`${API_BASE_URL}/booking/remind`, {
@@ -1170,13 +1174,14 @@ async function sendReminder(id, type) {
                 'Accept': 'application/json',
                 'X-Admin-Key': getAdminKey()
             },
-            body: JSON.stringify({ id, comment })
+            body: JSON.stringify({ id, comment, channel })
         });
+        const data = await response.json().catch(() => ({}));
         
         if (response.ok) {
-            alert('Påminnelse sendt!');
+            alert(channel === 'sms' ? 'Påminnelse sendt som SMS!' : 'Påminnelse sendt!');
         } else {
-            alert('Noe gikk galt. Prøv igjen.');
+            alert(data.error || 'Noe gikk galt. Prøv igjen.');
         }
     } catch (error) {
         console.error(error);

@@ -2,7 +2,7 @@ const { app } = require('@azure/functions');
 const { listBookings } = require('../../../shared/cosmosDb');
 const { updateBookingFields } = require('../../../shared/cosmosDb');
 const { sendEmail } = require('../../../shared/email');
-const { sendSms, buildSmsMessage } = require('../../../shared/sms');
+const { sendSms, buildSmsMessage, deriveSmsSigningToken } = require('../../../shared/sms');
 const { generateEmailHtml } = require('../../../shared/emailTemplate');
 
 /**
@@ -74,7 +74,8 @@ app.timer('signingReminder', {
         // --- Tenant signing reminders ---
         for (const booking of tenantNeedsReminder) {
             try {
-                const contractLink = `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(booking.id)}`;
+                const reminderToken = booking.smsSigningToken || deriveSmsSigningToken(booking.signingToken);
+                const contractLink = `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(booking.id)}${reminderToken ? `&signingToken=${encodeURIComponent(reminderToken)}` : ''}`;
                 const safeName = escapeHtml(booking.requesterName);
                 const safeEmail = escapeHtml(booking.requesterEmail);
                 const safeDate = escapeHtml(booking.date);
