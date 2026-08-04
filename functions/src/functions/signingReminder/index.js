@@ -155,8 +155,7 @@ app.timer('signingReminder', {
         // --- Landlord signing reminders ---
         for (const booking of landlordNeedsReminder) {
             try {
-                const contractLink = `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(booking.id)}&mode=admin`;
-                const adminLink = `${websiteUrl}/admin#${encodeURIComponent(booking.id)}`;
+                const adminLink = `${websiteUrl}/admin?contract=${encodeURIComponent(booking.id)}`;
                 const safeName = escapeHtml(booking.requesterName);
                 const safeDate = escapeHtml(booking.date);
                 const safeEventType = escapeHtml(booking.eventType || 'Reservasjon');
@@ -169,8 +168,7 @@ app.timer('signingReminder', {
                             <p>Leietaker <strong>${safeName}</strong> signerte leieavtalen for <strong>${safeDate}</strong> (${safeEventType}) den ${tenantSignedDate}, men avtalen mangler fortsatt utleiers signatur.</p>
                             <p>Vennligst signer avtalen. Forhåndsbetalingsforespørsel sendes automatisk når begge har signert.</p>
                             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
-                                <a href="${escapeHtml(contractLink)}" style="display:inline-block;padding:12px 24px;background:#1a6fa3;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">&#128394; Signer som utleier</a>
-                                <a href="${escapeHtml(adminLink)}" style="display:inline-block;padding:12px 24px;background:#6b7280;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Åpne i admin</a>
+                                <a href="${escapeHtml(adminLink)}" style="display:inline-block;padding:12px 24px;background:#1a6fa3;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">&#128394; Logg inn og signer som utleier</a>
                             </div>
                         `,
                         previewText: `Påminnelse: Signer leieavtalen for ${booking.date} som utleier`
@@ -181,7 +179,7 @@ app.timer('signingReminder', {
                         from,
                         subject: `Påminnelse: Signer leieavtalen – ${booking.requesterName} – ${booking.date}`,
                         html: boardHtml,
-                        text: `Leietaker ${booking.requesterName} signerte leieavtalen for ${booking.date} den ${new Date(booking.contract.signedAt).toLocaleString('nb-NO')}, men utleiers signatur mangler.\n\nSigner her: ${contractLink}\nAdmin: ${adminLink}`
+                        text: `Leietaker ${booking.requesterName} signerte leieavtalen for ${booking.date} den ${new Date(booking.contract.signedAt).toLocaleString('nb-NO')}, men utleiers signatur mangler.\n\nLogg inn og signer som utleier: ${adminLink}`
                     });
 
                     context.info(`signingReminder: Landlord reminder sent for ${booking.id}`);

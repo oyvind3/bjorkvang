@@ -71,8 +71,7 @@ app.http('signBooking', {
                     const boardTo = process.env.BOARD_TO_ADDRESS || process.env.DEFAULT_TO_ADDRESS;
                     const fromAddr = process.env.DEFAULT_FROM_ADDRESS || 'Bjorkvang <styret@bjorkvang.org>';
                     const websiteUrl = (process.env.WEBSITE_URL || 'https://bjorkvang.org').replace(/\/$/, '');
-                    const contractLink = `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(id)}&mode=admin`;
-                    const adminLink = `${websiteUrl}/admin#${encodeURIComponent(id)}`;
+                    const adminLink = `${websiteUrl}/admin?contract=${encodeURIComponent(id)}`;
 
                     const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (m) => ({
                         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -97,8 +96,7 @@ app.http('signBooking', {
                             <p style="margin-top:24px;"><strong>Neste steg:</strong></p>
                             <p style="color:#374151;">Gå til leieavtalen og signer som utleier. Forhåndsbetalingsforespørsel sendes automatisk til leietaker når begge har signert.</p>
                             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
-                                <a href="${escapeHtml(contractLink)}" style="display:inline-block;padding:12px 24px;background:#1a6fa3;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">&#128394; Signer som utleier</a>
-                                <a href="${escapeHtml(adminLink)}" style="display:inline-block;padding:12px 24px;background:#6b7280;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">Åpne i admin</a>
+                                <a href="${escapeHtml(adminLink)}" style="display:inline-block;padding:12px 24px;background:#1a6fa3;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold;">&#128394; Logg inn og signer som utleier</a>
                             </div>
                         `,
                         previewText: `${updatedBooking.requesterName} har signert leieavtalen for ${updatedBooking.date}`
@@ -110,7 +108,7 @@ app.http('signBooking', {
                             from: fromAddr,
                             subject: `Leieavtale signert: ${updatedBooking.requesterName} – ${updatedBooking.date}`,
                             html: notifyHtml,
-                            text: `${updatedBooking.requesterName} har signert leieavtalen for booking ${updatedBooking.date} (${updatedBooking.eventType || 'Reservasjon'}).\n\nÅpne leieavtalen: ${contractLink}\nÅpne i admin: ${adminLink}\n\nNeste steg: Signer som utleier. Forhåndsbetalingsforespørsel sendes automatisk når begge har signert.`
+                            text: `${updatedBooking.requesterName} har signert leieavtalen for booking ${updatedBooking.date} (${updatedBooking.eventType || 'Reservasjon'}).\n\nLogg inn og signer som utleier: ${adminLink}\n\nForhåndsbetalingsforespørsel sendes automatisk når begge har signert.`
                         });
                         context.info(`Board notification sent for tenant signature on ${id}`);
                     } else {
@@ -120,7 +118,7 @@ app.http('signBooking', {
                     const adminSmsBody = buildSmsMessage('admin.tenantSigned', {
                         requesterName: updatedBooking.requesterName,
                         date: updatedBooking.date,
-                        contractLink,
+                        adminLink,
                     });
                     await sendSmsToAdminGroup(adminSmsBody, context);
                 } catch (notifyError) {
