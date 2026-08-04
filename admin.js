@@ -1924,7 +1924,7 @@ async function createManualBooking(event) {
         spaces,
         services,
         adminCreated:   true,
-        paymentMethod:  document.getElementById('mb-payment-method')?.value || 'bank',
+        paymentMethod:  document.getElementById('mb-payment-method')?.value || 'vipps',
         externalContract:   document.getElementById('mb-external-contract')?.checked || false,
         depositAlreadyPaid: document.getElementById('mb-deposit-paid')?.checked || false,
         fullyPaid:          document.getElementById('mb-fully-paid')?.checked || false,
