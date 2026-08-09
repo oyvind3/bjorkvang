@@ -5,6 +5,7 @@ const { sendEmail } = require('../../../shared/email');
 const { sendSms, buildSmsMessage } = require('../../../shared/sms');
 const { generateEmailHtml } = require('../../../shared/emailTemplate');
 const vipps = require('../../../shared/vipps');
+const { buildFinalInvoice, generateInvoiceTableHtml, generateInvoiceText } = require('../../../shared/invoiceBuilder');
 
 const escapeHtml = (str) => String(str || '').replace(/[&<>"']/g, (m) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -84,72 +85,24 @@ app.http('sendFinalInvoice', {
             return createJsonResponse(400, { error: 'Booking mangler e-postadresse.' }, request);
         }
 
-        const depositNOK = booking.depositAmount || 0;
-        // For Minnesamvær bookings, the final total is based on actual guest count × rate
-        const baseTotalNOK = (minnesamvaerActualCount !== null)
-            ? minnesamvaerActualCount * minnesamvaerRate
-            : (booking.totalAmount || depositNOK * 2);
-        const totalNOK = baseTotalNOK;
-        const extrasTotal = extraItems.reduce((sum, item) => sum + item.amountNOK, 0);
-        const grandTotalNOK = totalNOK + cleaningFeeNOK + extrasTotal;
-        const remainingNOK = grandTotalNOK - depositNOK;
-        const paymentMethod = booking.paymentMethod || 'bank';
-        const bankAccount = process.env.BANK_ACCOUNT || '1822.40.12345';
-        const websiteUrl = process.env.WEBSITE_URL || 'https://bjorkvang.org';
-        const spaces = Array.isArray(booking.spaces) ? booking.spaces.join(', ') : (booking.spaces || '');
-        const services = Array.isArray(booking.services) ? booking.services.join(', ') : (booking.services || '');
+const depositNOK = booking.depositAmount || 0;
 
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
-        const dueDateStr = dueDate.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' });
-
-        const now = new Date().toISOString();
-
-        // Build itemised rows for the email table
-        const itemRows = [];
-
-        // Original package cost (or per-person for Minnesamvær)
-        if (minnesamvaerActualCount !== null) {
-            itemRows.push({
-                label: `Minnesamvær – ${minnesamvaerActualCount} gjester × kr ${minnesamvaerRate.toLocaleString('nb-NO')}/pers`,
-                amount: totalNOK,
-                style: ''
-            });
-        } else if (spaces) {
-            itemRows.push({ label: `Lokale – ${spaces}`, amount: totalNOK, style: '' });
-        }
-
-        // Original services (included in base price – just informational)
-        if (services) {
-            itemRows.push({ label: `Inkluderte tillegg – ${services}`, amount: null, style: 'color:#6b7280;' });
-        }
-
-        // Mandatory cleaning fee
-        itemRows.push({ label: 'Vask / Rengjøring (obligatorisk)', amount: cleaningFeeNOK, style: 'color:#b45309;' });
-
-        // Extra charges added by admin
-        for (const item of extraItems) {
-            itemRows.push({ label: item.description, amount: item.amountNOK, style: 'color:#b45309;' });
-        }
-
-        // Deposit already paid
-        itemRows.push({
-            label: '− Forhåndsbetaling allerede betalt',
-            amount: -depositNOK,
-            style: 'color:#059669;'
+        // Use shared invoice builder for all calculations
+        const invoiceData = buildFinalInvoice(booking, {
+            cleaningFeeNOK,
+            extraItems,
+            minnesamvaerActualCount,
+            minnesamvaerRate,
+            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
         });
 
-        const itemRowsHtml = itemRows.map(row => `
-            <tr style="border-bottom:1px solid #e5e7eb;">
-                <td style="padding:8px 0;${row.style}">${escapeHtml(row.label)}</td>
-                <td style="padding:8px 0;text-align:right;${row.style}">
-                    ${row.amount !== null ? `kr ${row.amount.toLocaleString('nb-NO')}` : '(inkludert)'}
-                </td>
-            </tr>`).join('');
+        const { baseTotalNOK, grandTotalNOK, remainingNOK, paymentMethod, bankAccount, lineItems, dueDateStr } = invoiceData;
+        const websiteUrl = process.env.WEBSITE_URL || 'https://bjorkvang.org';
+        const now = new Date().toISOString();
 
-        const itemRowsText = itemRows.map(row =>
-            `${row.label}: ${row.amount !== null ? 'kr ' + row.amount.toLocaleString('nb-NO') : '(inkludert)'}`
-        ).join('\n');
+        // Build itemised rows for the email table using invoiceData.lineItems
+        const itemRowsHtml = generateInvoiceTableHtml(invoiceData);
+        const itemRowsText = generateInvoiceText(invoiceData);
 
         let finalInvoiceVippsOrderId = null;
         let vippsUrl = null;
@@ -286,6 +239,8 @@ app.http('sendFinalInvoice', {
         const updateFields = {
             finalInvoiceSentAt: now,
             finalInvoiceAmountNOK: remainingNOK,
+            grandTotalNOK,
+            dueDate: dueDateStr,
             cleaningFeeNOK,
             ...(minnesamvaerActualCount !== null ? { minnesamvaerActualCount, minnesamvaerRate } : {}),
             // When skipping email, mark as paid immediately since admin is registering a settled invoice

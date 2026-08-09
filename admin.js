@@ -1031,6 +1031,8 @@ function createBookingCard(booking) {
                 approvedActions += `<button onclick="checkVippsPayment('${booking.finalInvoiceVippsOrderId}', '${booking.id}')" class="btn-sm" style="background:#ff5b24;color:#fff;">🔍 Sjekk Vipps-status</button>`;
             }
             approvedActions += `<button onclick="markFinalInvoicePaid('${booking.id}')" class="btn-sm" style="background:#0ea5e9;">✅ Sluttfaktura betalt${paymentMethod === 'bank' ? ' (bank)' : ' (manuelt)'}</button>`;
+            approvedActions += `<button onclick="viewFinalInvoice('${booking.id}')" class="btn-sm" style="background:#0ea5e9;">👁 Se sluttfaktura</button>`;
+            approvedActions += `<button onclick="resendFinalInvoice('${booking.id}')" class="btn-sm" style="background:#f59e0b;color:black;">📧 Send på nytt</button>`;
         }
 
         // Contextual reminder — only shown when leietaker has a pending action
@@ -1365,8 +1367,14 @@ function injectFinalInvoiceModal() {
                 <p style="margin:6px 0 0 26px;font-size:0.8rem;color:#9ca3af;">Ikke avkrysset: beløpet registreres kun internt og markeres som betalt.</p>
             </div>
 
+            <div id="fi-preview-container" style="display:none;margin-bottom:1rem;padding:12px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;">
+                <h4 style="margin:0 0 8px;font-size:0.95rem;color:#0369a1;">👁 Forhåndsvisning av faktura</h4>
+                <div id="fi-preview-content"></div>
+            </div>
+
             <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.25rem;">
                 <button onclick="closeFinalInvoiceModal()" style="padding:0.55rem 1.2rem; border:1px solid #d1d5db; border-radius:6px; background:#fff; cursor:pointer; font-size:0.95rem;">Avbryt</button>
+                <button id="fi-preview-btn" onclick="previewFinalInvoice()" style="padding:0.55rem 1.2rem; border:1px solid #0ea5e9; border-radius:6px; background:#e0f2fe; color:#0369a1; cursor:pointer; font-size:0.95rem;font-weight:500;">👁 Forhåndsvis faktura</button>
                 <button id="fi-submit-btn" onclick="submitFinalInvoice()" style="padding:0.55rem 1.4rem; border:none; border-radius:6px; background:#8b5cf6; color:#fff; font-weight:600; cursor:pointer; font-size:0.95rem;">Registrer og merk betalt</button>
             </div>
             <p id="fi-error" style="display:none; color:#ef4444; font-size:0.85rem; margin-top:0.75rem;"></p>
@@ -1430,6 +1438,113 @@ function closeFinalInvoiceModal() {
     const modal = document.getElementById('final-invoice-modal');
     if (modal) modal.style.display = 'none';
     _finalInvoiceBookingId = null;
+}
+
+async function previewFinalInvoice() {
+    const previewContainer = document.getElementById('fi-preview-container');
+    const previewContent = document.getElementById('fi-preview-content');
+    const errEl = document.getElementById('fi-error');
+    
+    if (!previewContainer || !previewContent) return;
+    
+    errEl.style.display = 'none';
+    
+    // Collect current values
+    const cleaningFeeNOK = parseFloat(document.getElementById('fi-cleaning-fee')?.value) || 0;
+    
+    let minnesamvaerActualCount = null;
+    let minnesamvaerRate = null;
+    if (_isMinnestund) {
+        minnesamvaerActualCount = parseFloat(document.getElementById('fi-minne-count')?.value) || 0;
+        minnesamvaerRate = parseFloat(document.getElementById('fi-minne-rate')?.value) || 30;
+        if (!minnesamvaerActualCount) {
+            errEl.textContent = 'Fyll inn faktisk antall gjester for minnesamvær.';
+            errEl.style.display = 'block';
+            return;
+        }
+    }
+    
+    const extraItems = [];
+    const extraRows = document.querySelectorAll('#fi-extra-items-container > div');
+    for (const row of extraRows) {
+        const desc = (row.querySelector('.fi-desc')?.value || '').trim();
+        const amt = parseFloat(row.querySelector('.fi-amount')?.value) || 0;
+        if (desc || amt) {
+            if (!desc) { errEl.textContent = 'Fyll inn beskrivelse for alle tilleggsrader.'; errEl.style.display = 'block'; return; }
+            if (amt < 0) { errEl.textContent = 'Beløp kan ikke være negativt.'; errEl.style.display = 'block'; return; }
+            extraItems.push({ description: desc, amountNOK: amt });
+        }
+    }
+    
+    // Build preview data locally
+    const depositNOK = _finalInvoiceDepositNOK;
+    const baseTotalNOK = _isMinnestund 
+        ? (minnesamvaerActualCount * minnesamvaerRate)
+        : _finalInvoiceTotalNOK;
+    const extrasTotal = extraItems.reduce((sum, item) => sum + item.amountNOK, 0);
+    const grandTotalNOK = baseTotalNOK + cleaningFeeNOK + extrasTotal;
+    const remainingNOK = grandTotalNOK - depositNOK;
+    
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 14);
+    const dueDateStr = dueDate.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' });
+    
+    // Build line items HTML
+    let linesHtml = '';
+    
+    if (_isMinnestund) {
+        linesHtml += `<tr style="border-bottom:1px solid #e5e7eb;">
+            <td style="padding:8px 0;">Minnesamvær – ${minnesamvaerActualCount} gjester × kr ${minnesamvaerRate.toLocaleString('nb-NO')}/pers</td>
+            <td style="padding:8px 0;text-align:right;">kr ${baseTotalNOK.toLocaleString('nb-NO')}</td>
+        </tr>`;
+    } else {
+        linesHtml += `<tr style="border-bottom:1px solid #e5e7eb;">
+            <td style="padding:8px 0;">Leiesum</td>
+            <td style="padding:8px 0;text-align:right;">kr ${baseTotalNOK.toLocaleString('nb-NO')}</td>
+        </tr>`;
+    }
+    
+    linesHtml += `<tr style="border-bottom:1px solid #e5e7eb;">
+        <td style="padding:8px 0;color:#b45309;">Vask / Rengjøring (obligatorisk)</td>
+        <td style="padding:8px 0;text-align:right;color:#b45309;">kr ${cleaningFeeNOK.toLocaleString('nb-NO')}</td>
+    </tr>`;
+    
+    for (const item of extraItems) {
+        linesHtml += `<tr style="border-bottom:1px solid #e5e7eb;">
+            <td style="padding:8px 0;color:#b45309;">${escHtml(item.description)}</td>
+            <td style="padding:8px 0;text-align:right;color:#b45309;">kr ${item.amountNOK.toLocaleString('nb-NO')}</td>
+        </tr>`;
+    }
+    
+    linesHtml += `<tr style="border-bottom:1px solid #e5e7eb;">
+        <td style="padding:8px 0;color:#059669;">− Forhåndsbetaling allerede betalt</td>
+        <td style="padding:8px 0;text-align:right;color:#059669;">− kr ${depositNOK.toLocaleString('nb-NO')}</td>
+    </tr>`;
+    
+    linesHtml += `<tr style="border-top:2px solid #e5e7eb;">
+        <td style="padding:10px 0;font-weight:600;">Totalt for leieforholdet</td>
+        <td style="padding:10px 0;text-align:right;font-weight:600;">kr ${grandTotalNOK.toLocaleString('nb-NO')}</td>
+    </tr>
+    <tr>
+        <td style="padding:14px 0 0;font-weight:bold;font-size:1.1rem;">Gjenstående å betale</td>
+        <td style="padding:14px 0 0;text-align:right;font-weight:bold;font-size:1.1rem;">kr ${remainingNOK.toLocaleString('nb-NO')}</td>
+    </tr>`;
+    
+    previewContent.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:0.92rem;margin-bottom:12px;">
+            <tr style="border-bottom:2px solid #e5e7eb;font-weight:600;">
+                <td style="padding:8px 0;">Beskrivelse</td>
+                <td style="padding:8px 0;text-align:right;">Beløp</td>
+            </tr>
+            ${linesHtml}
+        </table>
+        <div style="font-size:0.85rem;color:#6b7280;border-top:1px solid #e5e7eb;padding-top:10px;">
+            <p style="margin:4px 0;"><strong>Betalingsfrist:</strong> ${dueDateStr}</p>
+            <p style="margin:4px 0;">Forhåndsbetaling (kr ${depositNOK.toLocaleString('nb-NO')}) er allerede betalt og er trukket fra totalbeløpet.</p>
+        </div>
+    `;
+    
+    previewContainer.style.display = 'block';
 }
 
 async function submitFinalInvoice() {
@@ -1513,6 +1628,115 @@ async function markFinalInvoicePaid(id) {
         } else {
             const data = await res.json().catch(() => ({}));
             alert(data.error || 'Noe gikk galt.');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Nettverksfeil.');
+    }
+}
+
+async function viewFinalInvoice(id) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/booking/get-final-invoice?id=${id}`, {
+            headers: { 'Accept': 'application/json', 'X-Admin-Key': getAdminKey() }
+        });
+        const data = await res.json().catch(() => ({}));
+        
+        if (!res.ok) {
+            alert(data.error || 'Kunne ikke hente sluttfaktura.');
+            return;
+        }
+        
+        // Build modal for viewing invoice
+        const invoice = data.invoice;
+        const summary = data.summary;
+        
+        let linesHtml = '';
+        for (const item of invoice.lineItems) {
+            let colorStyle = '';
+            if (item.type === 'extra') colorStyle = 'color:#b45309;';
+            else if (item.type === 'deduction') colorStyle = 'color:#059669;';
+            else if (item.type === 'info') colorStyle = 'color:#6b7280;';
+            
+            linesHtml += `<tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:8px 0;${colorStyle}">${escHtml(item.description)}</td>
+                <td style="padding:8px 0;text-align:right;${colorStyle}">
+                    ${item.amountNOK !== null ? `kr ${item.amountNOK.toLocaleString('nb-NO')}` : '(inkludert)'}
+                </td>
+            </tr>`;
+        }
+        
+        const modal = document.createElement('div');
+        modal.id = 'view-invoice-modal';
+        modal.style.cssText = 'display:flex; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9000; align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto;';
+        modal.innerHTML = `
+            <div style="background:#fff; border-radius:10px; padding:2rem; max-width:600px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <h3 style="margin:0 0 1rem; font-size:1.2rem;">📄 Sluttfaktura</h3>
+                
+                <div style="font-size:0.85rem;color:#6b7280;margin-bottom:1rem;">
+                    <p style="margin:4px 0;"><strong>Sendt:</strong> ${new Date(data.sentAt).toLocaleString('nb-NO')}</p>
+                    <p style="margin:4px 0;"><strong>Betalingsfrist:</strong> ${summary.dueDateStr}</p>
+                    <p style="margin:4px 0;"><strong>Status:</strong> ${data.isPaid ? '✅ Betalt' : '⏳ Ikke betalt'}</p>
+                    ${invoice.vippsUsed ? `<p style="margin:4px 0;"><strong>Vipps:</strong> Ja (ordre: ${invoice.vippsOrderId})</p>` : ''}
+                </div>
+                
+                <table style="width:100%;border-collapse:collapse;font-size:0.92rem;margin-bottom:12px;">
+                    <tr style="border-bottom:2px solid #e5e7eb;font-weight:600;">
+                        <td style="padding:8px 0;">Beskrivelse</td>
+                        <td style="padding:8px 0;text-align:right;">Beløp</td>
+                    </tr>
+                    ${linesHtml}
+                </table>
+                
+                <div style="border-top:2px solid #e5e7eb;padding-top:10px;margin-top:10px;">
+                    <div style="display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px;">
+                        <span>Totalt for leieforholdet</span>
+                        <span>kr ${summary.grandTotalNOK.toLocaleString('nb-NO')}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:bold;color:#059669;">
+                        <span>Gjenstående å betale</span>
+                        <span>kr ${summary.remainingNOK.toLocaleString('nb-NO')}</span>
+                    </div>
+                </div>
+                
+                ${!data.isPaid && invoice.paymentMethod === 'bank' ? `
+                <div style="margin-top:16px;padding:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
+                    <p style="margin:0 0 8px;font-weight:bold;">Betalingsinformasjon</p>
+                    <p style="margin:4px 0;font-size:0.9rem;">🏦 <strong>Kontonummer:</strong> ${invoice.bankAccount}</p>
+                    <p style="margin:4px 0;font-size:0.9rem;">📋 <strong>Merk betalingen med:</strong> ${id}</p>
+                </div>
+                ` : ''}
+                
+                <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem;">
+                    ${!data.isPaid ? `<button onclick="markFinalInvoicePaid('${id}');document.getElementById('view-invoice-modal').style.display='none';" class="btn-sm" style="background:#0ea5e9;">✅ Merk betalt</button>` : ''}
+                    <button onclick="document.getElementById('view-invoice-modal').style.display='none'" style="padding:0.55rem 1.2rem; border:1px solid #d1d5db; border-radius:6px; background:#fff; cursor:pointer; font-size:0.95rem;">Lukk</button>
+                </div>
+            </div>
+        `;
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+        document.body.appendChild(modal);
+    } catch (err) {
+        console.error(err);
+        alert('Nettverksfeil ved henting av faktura.');
+    }
+}
+
+async function resendFinalInvoice(id) {
+    if (!confirm('Er du sikker på at du vil sende sluttfaktura på nytt? Dette vil sende en ny e-post/SMS til kunden.')) return;
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/booking/send-final-invoice`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Admin-Key': getAdminKey() },
+            body: JSON.stringify({ id, force: true })
+        });
+        const data = await res.json().catch(() => ({}));
+        
+        if (res.ok) {
+            alert(`Sluttfaktura sendt på nytt til ${data.sentTo || 'kunden'}!`);
+            loadDashboard();
+        } else {
+            alert(data.error || 'Noe gikk galt ved utsending.');
         }
     } catch (err) {
         console.error(err);
