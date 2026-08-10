@@ -104,6 +104,7 @@ loadFunction('sendDepositRequest', './functions/sendDepositRequest');
 loadFunction('checkVippsStatuses', './functions/checkVippsStatuses');
 loadFunction('sendFinalInvoice', './functions/sendFinalInvoice');
 loadFunction('rescheduleBooking', './functions/rescheduleBooking');
+loadFunction('editBooking', './functions/editBooking');
 loadFunction('getMembers', './functions/getMembers');
 loadFunction('signingReminder', './functions/signingReminder');
 loadFunction('adminContacts', './functions/adminContacts');

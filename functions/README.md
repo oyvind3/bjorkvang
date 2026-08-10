@@ -69,6 +69,7 @@ npm test
 | `getAdminCalendar` | `GET /api/booking/admin` | `listBookings()` |
 | `approveBooking` | `GET /api/booking/approve?id=X` | `getBooking()`, `updateBookingStatus()` |
 | `rejectBooking` | `POST /api/booking/reject?id=X` | `getBooking()`, `updateBookingStatus()` |
+| `editBooking` | `POST /api/booking/edit` | `getBooking()`, `updateBookingFields()` |
 
 ### ✅ Code Changes Summary
 

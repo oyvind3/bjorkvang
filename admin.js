@@ -131,6 +131,193 @@ async function confirmReschedule() {
     }
 }
 
+// ---------- Edit booking modal ----------
+
+const EDIT_WHOLE_SPACES = ['Hele lokalet', 'Bryllupspakke'];
+const EDIT_INDIVIDUAL_SPACES = ['Peisestue', 'Salen', 'Små møter'];
+let _editBookingId = null;
+
+function injectEditBookingModal() {
+    if (document.getElementById('edit-booking-modal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'edit-booking-modal';
+    modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9100; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;';
+    modal.innerHTML = `
+        <div role="dialog" aria-modal="true" aria-labelledby="edit-booking-title" style="background:#fff; border-radius:10px; padding:1.5rem; max-width:760px; width:100%; max-height:calc(100vh - 32px); overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 id="edit-booking-title" style="margin:0 0 0.3rem; font-size:1.25rem;">Rediger booking</h3>
+            <p style="color:#6b7280; font-size:0.88rem; margin:0 0 1.2rem;">Korriger kundedata og bookingdetaljer. Beløp og betalingsstatus endres ikke automatisk.</p>
+            <form id="edit-booking-form" onsubmit="confirmEditBooking(event)" class="manual-booking-form" style="margin-top:0;">
+                <label>Navn *<input id="edit-name" type="text" maxlength="100" required></label>
+                <label>E-post<input id="edit-email" type="email" maxlength="254"></label>
+                <label>Telefon<input id="edit-phone" type="tel" maxlength="30"></label>
+                <label>Adresse<input id="edit-address" type="text" maxlength="200"></label>
+                <label>Dato *<input id="edit-date" type="date" required></label>
+                <label>Starttid *<input id="edit-time" type="time" required></label>
+                <label>Varighet (timer) *<input id="edit-duration" type="number" min="1" max="72" step="0.5" required></label>
+                <label>Formål *
+                    <select id="edit-eventtype" required>
+                        <option value="Familiefeiring">Familiefeiring</option>
+                        <option value="Bryllup">Bryllup</option>
+                        <option value="Møte eller kurs">Møte eller kurs</option>
+                        <option value="Konsert eller forestilling">Konsert eller forestilling</option>
+                        <option value="Minnestund">Minnestund</option>
+                        <option value="Dugnad">Dugnad</option>
+                        <option value="Annet">Annet</option>
+                        <option value="Reservasjon">Reservasjon</option>
+                    </select>
+                </label>
+                <div class="full">
+                    <strong style="font-size:0.9rem;">Lokale *</strong>
+                    <div id="edit-spaces-row" class="option-row" style="margin-top:6px;">
+                        <label><input type="checkbox" name="edit-spaces" value="Peisestue" onchange="editEnforceSpace(this)"> Peisestue</label>
+                        <label><input type="checkbox" name="edit-spaces" value="Salen" onchange="editEnforceSpace(this)"> Salen</label>
+                        <label><input type="checkbox" name="edit-spaces" value="Hele lokalet" onchange="editEnforceSpace(this)"> Hele lokalet</label>
+                        <label><input type="checkbox" name="edit-spaces" value="Bryllupspakke" onchange="editEnforceSpace(this)"> Bryllupspakke</label>
+                        <label><input type="checkbox" name="edit-spaces" value="Små møter" onchange="editEnforceSpace(this)"> Små møter</label>
+                    </div>
+                </div>
+                <div class="full">
+                    <strong style="font-size:0.9rem;">Tillegg</strong>
+                    <div class="option-row" style="margin-top:6px;">
+                        <label><input type="checkbox" name="edit-services" value="Projektor"> Projektor</label>
+                        <label><input type="checkbox" name="edit-services" value="Teknisk utstyr"> Teknisk utstyr</label>
+                        <label><input type="checkbox" name="edit-services" value="Vask"> Vask</label>
+                    </div>
+                </div>
+                <label>Antall deltakere<input id="edit-attendees" type="number" min="1" max="500"></label>
+                <label class="full">Notat / tilleggsinformasjon<textarea id="edit-message" rows="3" maxlength="2000"></textarea></label>
+                <p id="edit-booking-error" class="full" role="alert" style="display:none; color:#b91c1c; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:0.7rem; margin:0;"></p>
+                <div class="full" style="display:flex; gap:0.75rem; justify-content:flex-end; flex-wrap:wrap;">
+                    <button type="button" onclick="closeEditBookingModal()" style="padding:0.6rem 1.2rem; border:1px solid #d1d5db; border-radius:6px; background:#fff; cursor:pointer;">Avbryt</button>
+                    <button id="edit-booking-confirm-btn" type="submit" style="padding:0.6rem 1.3rem; border:none; border-radius:6px; background:#2563eb; color:#fff; font-weight:600; cursor:pointer;">Lagre endringer</button>
+                </div>
+            </form>
+        </div>
+    `;
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) closeEditBookingModal();
+    });
+    document.body.appendChild(modal);
+}
+
+function openEditBookingModal(id) {
+    const booking = _allBookings.find((item) => item.id === id);
+    if (!booking) {
+        alert('Fant ikke bookingen. Last siden på nytt og prøv igjen.');
+        return;
+    }
+
+    injectEditBookingModal();
+    _editBookingId = id;
+
+    document.getElementById('edit-name').value = booking.requesterName || '';
+    document.getElementById('edit-email').value = booking.requesterEmail || '';
+    document.getElementById('edit-phone').value = booking.phone || '';
+    document.getElementById('edit-address').value = booking.address || '';
+    document.getElementById('edit-date').value = booking.date || '';
+    document.getElementById('edit-time').value = booking.time || '';
+    document.getElementById('edit-duration').value = booking.duration || 4;
+    document.getElementById('edit-eventtype').value = booking.eventType || 'Reservasjon';
+    document.getElementById('edit-attendees').value = booking.attendees || '';
+    document.getElementById('edit-message').value = booking.message || '';
+
+    const selectedSpaces = Array.isArray(booking.spaces) ? booking.spaces : [booking.spaces].filter(Boolean);
+    const selectedServices = Array.isArray(booking.services) ? booking.services : [booking.services].filter(Boolean);
+    document.querySelectorAll('input[name="edit-spaces"]').forEach((input) => {
+        input.checked = selectedSpaces.includes(input.value);
+    });
+    document.querySelectorAll('input[name="edit-services"]').forEach((input) => {
+        input.checked = selectedServices.includes(input.value);
+    });
+
+    const errorEl = document.getElementById('edit-booking-error');
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+    document.getElementById('edit-booking-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('edit-name').focus(), 50);
+}
+
+function closeEditBookingModal() {
+    const modal = document.getElementById('edit-booking-modal');
+    if (modal) modal.style.display = 'none';
+    _editBookingId = null;
+}
+
+function editEnforceSpace(changed) {
+    if (!changed.checked) return;
+    document.querySelectorAll('input[name="edit-spaces"]').forEach((input) => {
+        if (input === changed) return;
+        if (EDIT_WHOLE_SPACES.includes(changed.value) ||
+            (EDIT_INDIVIDUAL_SPACES.includes(changed.value) &&
+                (EDIT_WHOLE_SPACES.includes(input.value) || EDIT_INDIVIDUAL_SPACES.includes(input.value)))) {
+            input.checked = false;
+        }
+    });
+}
+
+async function confirmEditBooking(event) {
+    event.preventDefault();
+    const errorEl = document.getElementById('edit-booking-error');
+    const btn = document.getElementById('edit-booking-confirm-btn');
+    const spaces = Array.from(document.querySelectorAll('input[name="edit-spaces"]:checked')).map((input) => input.value);
+
+    if (!_editBookingId || spaces.length === 0) {
+        errorEl.textContent = spaces.length === 0 ? 'Velg minst ett lokale.' : 'Booking-ID mangler.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    const payload = {
+        id: _editBookingId,
+        requesterName: document.getElementById('edit-name').value.trim(),
+        requesterEmail: document.getElementById('edit-email').value.trim(),
+        phone: document.getElementById('edit-phone').value.trim(),
+        address: document.getElementById('edit-address').value.trim(),
+        date: document.getElementById('edit-date').value,
+        time: document.getElementById('edit-time').value,
+        duration: Number(document.getElementById('edit-duration').value),
+        eventType: document.getElementById('edit-eventtype').value,
+        spaces,
+        services: Array.from(document.querySelectorAll('input[name="edit-services"]:checked')).map((input) => input.value),
+        attendees: document.getElementById('edit-attendees').value,
+        message: document.getElementById('edit-message').value.trim(),
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Lagrer...';
+    errorEl.style.display = 'none';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/booking/edit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Admin-Key': getAdminKey(),
+            },
+            body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            errorEl.textContent = data.error || 'Kunne ikke lagre endringene.';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        closeEditBookingModal();
+        await loadDashboard();
+        alert('Bookingdetaljene er oppdatert. Ingen melding ble sendt automatisk til leietakeren.');
+    } catch (error) {
+        console.error('confirmEditBooking error:', error);
+        errorEl.textContent = 'Nettverksfeil. Prøv igjen.';
+        errorEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Lagre endringer';
+    }
+}
+
 async function checkLogin() {
     const input = document.getElementById('password-input').value;
     const btn = document.querySelector('#login-overlay button');
@@ -875,6 +1062,15 @@ function createBookingCard(booking) {
     
     const spaces = Array.isArray(booking.spaces) ? booking.spaces.join(', ') : booking.spaces;
     const services = Array.isArray(booking.services) ? booking.services.join(', ') : booking.services;
+    const safeEventType = escHtml(booking.eventType || 'Reservasjon');
+    const safeTime = escHtml(booking.time || '-');
+    const safeName = escHtml(booking.requesterName || '-');
+    const safeEmail = escHtml(booking.requesterEmail || '');
+    const safePhone = escHtml(booking.phone || '-');
+    const safeAddress = escHtml(booking.address || '');
+    const safeSpaces = escHtml(spaces || 'Ikke spesifisert');
+    const safeServices = escHtml(services || '');
+    const safeMessage = escHtml(booking.message || '');
     
     const contract = booking.contract || {};
     const isRequesterSigned = !!contract.signedAt;
@@ -1058,18 +1254,19 @@ function createBookingCard(booking) {
 
     div.innerHTML = `
         <div class="booking-details">
-            <h3>${booking.eventType || 'Reservasjon'} – ${formatDate(booking.date)} ${signatureBadge} ${paymentBadges}</h3>
-            <div class="booking-meta"><strong>Tid:</strong> ${booking.time} (${booking.duration} timer)</div>
-            <div class="booking-meta"><strong>Navn:</strong> ${booking.requesterName}</div>
-            <div class="booking-meta"><strong>E-post:</strong> <a href="mailto:${booking.requesterEmail}">${booking.requesterEmail}</a></div>
-            <div class="booking-meta"><strong>Tlf:</strong> ${booking.phone || '-'}</div>
-            <div class="booking-meta"><strong>Areal:</strong> ${spaces || 'Ikke spesifisert'}</div>
-            ${services ? `<div class="booking-meta"><strong>Tillegg:</strong> ${services}</div>` : ''}
+            <h3>${safeEventType} – ${formatDate(booking.date)} ${signatureBadge} ${paymentBadges}</h3>
+            <div class="booking-meta"><strong>Tid:</strong> ${safeTime} (${Number(booking.duration) || 0} timer)</div>
+            <div class="booking-meta"><strong>Navn:</strong> ${safeName}</div>
+            <div class="booking-meta"><strong>E-post:</strong> ${safeEmail ? `<a href="mailto:${safeEmail}">${safeEmail}</a>` : '-'}</div>
+            <div class="booking-meta"><strong>Tlf:</strong> ${safePhone}</div>
+            ${safeAddress ? `<div class="booking-meta"><strong>Adresse:</strong> ${safeAddress}</div>` : ''}
+            <div class="booking-meta"><strong>Areal:</strong> ${safeSpaces}</div>
+            ${safeServices ? `<div class="booking-meta"><strong>Tillegg:</strong> ${safeServices}</div>` : ''}
             ${booking.attendees ? `<div class="booking-meta"><strong>Antall:</strong> ${booking.attendees}</div>` : ''}
             <div class="booking-meta"><strong>Betalingsmetode:</strong> ${paymentMethod === 'vipps' ? 'Vipps' : 'Bank'}</div>
             ${totalNOK ? `<div class="booking-meta"><strong>Estimert total:</strong> kr ${totalNOK.toLocaleString('nb-NO')} &nbsp;|&nbsp; <strong>Forhåndsbetaling (50%):</strong> kr ${depositNOK.toLocaleString('nb-NO')} &nbsp;|&nbsp; <strong>Restbeløp:</strong> kr ${(totalNOK - depositNOK).toLocaleString('nb-NO')}</div>` : ''}
             ${booking.cateringContact ? `<div class="booking-meta" style="margin-top:5px;"><span style="background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:4px;font-size:0.8rem;">🍽 Catering: Ønsker kontakt fra Næs Mat og Event</span></div>` : ''}
-            ${booking.message ? `<div class="booking-meta" style="margin-top:5px;font-style:italic;">"${booking.message}"</div>` : ''}
+            ${safeMessage ? `<div class="booking-meta" style="margin-top:5px;font-style:italic;">"${safeMessage}"</div>` : ''}
             <div class="booking-meta" style="margin-top:5px;font-size:0.8rem;color:#999;">
                 Sendt inn: ${createdStr}<br>
                 ID: ${booking.id} | Status: ${translateStatus(booking.status)}
@@ -1088,12 +1285,13 @@ function createBookingCard(booking) {
             ${booking.previousDate ? `<div class="booking-meta" style="color:#6366f1;font-size:0.8rem;">↺ Ombooket fra: ${booking.previousDate}${booking.previousTime ? ' kl. ' + booking.previousTime : ''}</div>` : ''}
         </div>
         <div class="booking-actions">
+            <button onclick="openEditBookingModal('${booking.id}')" class="btn-sm" style="background:#2563eb;" title="Korriger navn, kontaktinfo og bookingdetaljer">✏️ Rediger</button>
             ${booking.status === 'pending' ? `
                 <button onclick="approveBooking('${booking.id}')" class="btn-sm btn-approve">Godkjenn</button>
                 <button onclick="rejectBooking('${booking.id}')" class="btn-sm btn-reject">Avvis</button>
             ` : ''}
             ${approvedActions}
-            ${booking.phone ? `<button onclick="openSmsCenter('${booking.id}', '${booking.phone}', '${(booking.requesterName || '').replace(/'/g, "\\'")}'  )" class="btn-sm" style="background:#3b82f6;" title="Send SMS til leietaker">💬 SMS</button>` : ''}
+            ${booking.phone ? `<button onclick="openSmsCenterForBooking('${booking.id}')" class="btn-sm" style="background:#3b82f6;" title="Send SMS til leietaker">💬 SMS</button>` : ''}
             <button onclick="exportBookingCSV('${booking.id}')" class="btn-sm" style="background:#6b7280;" title="Last ned leiedetaljer som CSV">⬇ Eksporter</button>
         </div>
     `;
@@ -2359,6 +2557,15 @@ function openSmsCenter(bookingId, phone, name) {
     // Scroll into view
     document.getElementById('sms-center-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.getElementById('sms-body')?.focus();
+}
+
+function openSmsCenterForBooking(bookingId) {
+    const booking = _allBookings.find((item) => item.id === bookingId);
+    if (!booking) {
+        alert('Fant ikke bookingen. Last siden på nytt og prøv igjen.');
+        return;
+    }
+    openSmsCenter(booking.id, booking.phone || '', booking.requesterName || '');
 }
 
 async function sendManualSms() {

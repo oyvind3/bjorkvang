@@ -188,3 +188,33 @@ test.describe('TC-24 · Calendar reflects correct booking count', () => {
     expect(found).toBeUndefined();
   });
 });
+
+test.describe('TC-25 · Admin can edit booking details', () => {
+  test('corrected requester name is persisted', async ({ request }) => {
+    const original = buildBookingPayload();
+    const id = await createBooking(request, original);
+
+    const editRes = await request.post(`${API_BASE}/booking/edit`, {
+      data: {
+        id,
+        ...original,
+        requesterName: 'Korrigert Navn',
+        address: 'Testvegen 1',
+        services: ['Projektor'],
+        attendees: 20,
+        message: 'Korrigert av admin',
+      },
+    });
+
+    expect(editRes.ok()).toBe(true);
+    const editBody = await editRes.json();
+    expect(editBody.booking.requesterName).toBe('Korrigert Navn');
+
+    const adminRes = await request.get(`${API_BASE}/booking/admin`);
+    expect(adminRes.ok()).toBe(true);
+    const { bookings } = await adminRes.json();
+    const updated = bookings.find((booking) => booking.id === id);
+    expect(updated?.requesterName).toBe('Korrigert Navn');
+    expect(updated?.address).toBe('Testvegen 1');
+  });
+});
