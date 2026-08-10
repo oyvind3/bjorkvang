@@ -85,7 +85,7 @@ app.http('sendFinalInvoice', {
             return createJsonResponse(400, { error: 'Booking mangler e-postadresse.' }, request);
         }
 
-const depositNOK = booking.depositAmount || 0;
+        const depositNOK = booking.depositAmount || 0;
 
         // Use shared invoice builder for all calculations
         const invoiceData = buildFinalInvoice(booking, {

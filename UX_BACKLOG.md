@@ -291,7 +291,7 @@ Bruk Vipps [ePayment reserve/capture-mønster](https://developer.vippsmobilepay.
 **Avhengigheter:** FAK-01  
 **Notater:** Kontonummer / betalingsinfo må legges inn av styret (miljøvariabel eller hardkodes).  
 **Impact:** 🔴 Høy | **Effort:** Medium  
-**Status:** `[x] Fullført` *(kontonummer 1822.40.12345 og Vipps 104631 satt via miljøvariabler)*
+**Status:** `[x] Fullført` *(kontonummer 1810.40.02508 og Vipps 104631 satt via miljøvariabler)*
 
 ---
 

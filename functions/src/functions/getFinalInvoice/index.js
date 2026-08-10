@@ -57,7 +57,7 @@ app.http('getFinalInvoice', {
 
             // Determine payment method and status
             const paymentMethod = booking.paymentMethod || 'bank';
-            const bankAccount = process.env.BANK_ACCOUNT || '1822.40.12345';
+            const bankAccount = process.env.BANK_ACCOUNT || '1810.40.02508';
             const isPaid = !!booking.finalInvoicePaid || !!booking.finalInvoicePaidAt;
             
             // Build Vipps URL if applicable (note: original link expires, this is informational)

@@ -93,7 +93,7 @@ app.http('sendDepositRequest', {
         const depositNOK = Math.round(totalNOK * 0.5);
         const remainingNOK = totalNOK - depositNOK;
         const paymentMethod = booking.paymentMethod || 'bank';
-        const bankAccount = process.env.BANK_ACCOUNT || '1822.40.12345';
+        const bankAccount = process.env.BANK_ACCOUNT || '1810.40.02508';
         const websiteUrl = process.env.WEBSITE_URL || 'https://bjorkvang.org';
         const spaces = Array.isArray(booking.spaces) ? booking.spaces.join(', ') : (booking.spaces || '');
         const now = new Date().toISOString();

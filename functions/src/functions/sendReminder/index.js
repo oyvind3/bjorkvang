@@ -48,7 +48,7 @@ app.http('sendReminder', {
             const websiteUrl = process.env.WEBSITE_URL || 'https://bjorkvang.org';
             const reminderToken = booking.smsSigningToken || deriveSmsSigningToken(booking.signingToken);
             const contractLink = `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(booking.id)}${reminderToken ? `&signingToken=${encodeURIComponent(reminderToken)}` : ''}`;
-            const bankAccount = process.env.BANK_ACCOUNT || '1822.40.12345';
+            const bankAccount = process.env.BANK_ACCOUNT || '1810.40.02508';
 
             const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (m) => ({
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'

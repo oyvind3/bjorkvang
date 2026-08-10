@@ -35,7 +35,7 @@ const oldMsg = c.match(/showStatus\(\s*`Bookingforespørsel sendt[\s\S]*?'succes
 if (oldMsg) {
   const newMsg = `showStatus(
             \`Bookingforespørsel sendt! Styret vil bekrefte innen kort tid. \` +
-            \`Betal 50\u00a0% Forhåndsbetaling\u00a0– kr \${depositAmount.toLocaleString('nb-NO')}\u00a0– til kontonr.\u00a01822.40.12345 \` +
+            \`Betal 50\u00a0% Forhåndsbetaling\u00a0– kr \${depositAmount.toLocaleString('nb-NO')}\u00a0– til kontonr.\u00a01810.40.02508 \` +
             \`(eller Vipps\u00a0104631) innen 14 dager etter bekreftelse. \` +
             \`Restbeløp kr \${(totalAmount - depositAmount).toLocaleString('nb-NO')} faktureres etter arrangementet.\`,
             'success'

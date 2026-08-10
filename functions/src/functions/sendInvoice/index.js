@@ -38,7 +38,7 @@ app.http('sendInvoice', {
             return createJsonResponse(404, { error: 'Booking not found.' }, request);
         }
 
-        const bankAccount = process.env.BANK_ACCOUNT || '1822.40.12345';
+        const bankAccount = process.env.BANK_ACCOUNT || '1810.40.02508';
         const vippsNumber = process.env.VIPPS_NUMBER || '104631';
         const from = process.env.DEFAULT_FROM_ADDRESS;
 

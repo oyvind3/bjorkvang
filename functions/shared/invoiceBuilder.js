@@ -53,7 +53,7 @@ function buildFinalInvoice(booking, options = {}) {
     const remainingNOK = grandTotalNOK - depositNOK;
 
     const paymentMethod = booking.paymentMethod || 'bank';
-    const bankAccount = process.env.BANK_ACCOUNT || '1822.40.12345';
+    const bankAccount = process.env.BANK_ACCOUNT || '1810.40.02508';
     const spaces = Array.isArray(booking.spaces) ? booking.spaces.join(', ') : (booking.spaces || '');
     const services = Array.isArray(booking.services) ? booking.services.join(', ') : (booking.services || '');
 
