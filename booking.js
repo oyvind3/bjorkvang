@@ -299,6 +299,16 @@ document.addEventListener('DOMContentLoaded', function () {
   const CALENDAR_API_ENDPOINT = `${API_BASE_URL}/api/booking/calendar`;
 
   async function submitBooking(bookingDetails) {
+      // Valider at startDate eksisterer og er en gyldig dato
+      if (!bookingDetails.startDate || !(bookingDetails.startDate instanceof Date) || Number.isNaN(bookingDetails.startDate.getTime())) {
+          throw new Error('Ugyldig startdato. Vennligst velg en gyldig dato og klokkeslett.');
+      }
+
+      // Valider at endDate eksisterer og er en gyldig dato (hvis angitt)
+      if (bookingDetails.endDate && (!(bookingDetails.endDate instanceof Date) || Number.isNaN(bookingDetails.endDate.getTime()))) {
+          throw new Error('Ugyldig sluttdato. Vennligst velg en gyldig sluttdato og klokkeslett.');
+      }
+
       const payload = {
           date: bookingDetails.startDate.toISOString().split('T')[0],
           time: bookingDetails.startDate.toTimeString().slice(0, 5),
@@ -1413,8 +1423,19 @@ document.addEventListener('DOMContentLoaded', function () {
           fieldError(form.querySelector('#duration'), 'Varighet må være minst én time.');
           return;
         }
+        // Begrens varighet til maksimum 23 timer for å unngå problemer med døgn-overganger
+        if (durationParsed > 23) {
+          fieldError(form.querySelector('#duration'), 'Varighet kan ikke overstige 23 timer. For lengre arrangementer, vennligst kontakt styret.');
+          return;
+        }
         duration = durationParsed;
         endDate = new Date(startDate.getTime() + duration * 60 * 60 * 1000);
+        
+        // Valider at slutt-datoen ble beregnet korrekt
+        if (Number.isNaN(endDate.getTime())) {
+          fieldError(form.querySelector('#duration'), 'Kunne ikke beregne sluttidspunkt. Vennligst velg en kortere varighet.');
+          return;
+        }
       }
 
       const conflictingEvent = events.find((event) => {
@@ -1447,6 +1468,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const status = computeSuggestedStatus(selectedSpaces, duration, '');
 
       const bookingDetails = {
+        startDate,
+        endDate,
         name,
         email,
         phone,
@@ -1459,8 +1482,7 @@ document.addEventListener('DOMContentLoaded', function () {
         attendees: attendeeCount,
         isMember: form.querySelector('#is-member')?.checked ?? false,
         cateringContact: form.querySelector('#catering-contact')?.checked ?? false,
-          ageVerified: form.querySelector('#age-verified')?.checked ?? false,
-        endDate
+        ageVerified: form.querySelector('#age-verified')?.checked ?? false,
       };
 
       // --- Submit booking request (payment preference stored, no payment taken now) ---
