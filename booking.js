@@ -80,6 +80,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
       const endDate = new Date(startDate.getTime() + duration * 60 * 60 * 1000);
+      
+      // Sjekk at datoene er gyldige før vi bruker toISOString()
+      if (!(startDate instanceof Date) || isNaN(startDate.getTime()) ||
+          !(endDate instanceof Date) || isNaN(endDate.getTime())) {
+        alert('Kunne ikke beregne datoer. Vennligst prøv igjen.');
+        return;
+      }
+      
       // Konstruer ny hendelse
       const newEvent = {
         title: 'Reservert: ' + name,
