@@ -4,8 +4,8 @@ const { listBookings } = require('../../../shared/cosmosDb');
 
 // Only bookings explicitly listed here may expose a public event name.
 // All ordinary customer bookings remain anonymised as reservations.
-const PUBLIC_BOOKING_LABELS = new Map([
-    ['booking-1780234276656-4zv4dv4', 'Basar'],
+const PUBLIC_BOOKINGS = new Map([
+    ['booking-1780234276656-4zv4dv4', { title: 'Basar', duration: 36 }],
 ]);
 
 /**
@@ -28,15 +28,18 @@ app.http('getCalendar', {
 
             // Only expose minimal information for public calendar
             const bookings = activeBookings.map((booking) => {
-                const publicLabel = PUBLIC_BOOKING_LABELS.get(booking.id);
+                const publicBooking = PUBLIC_BOOKINGS.get(booking.id);
 
                 return {
                     id: booking.id,
                     date: booking.date,
                     time: booking.time,
-                    duration: booking.duration,
+                    duration: publicBooking?.duration || booking.duration,
                     status: booking.status === 'approved' ? 'confirmed' : booking.status,
-                    ...(publicLabel ? { title: publicLabel, eventType: publicLabel } : {}),
+                    ...(publicBooking ? {
+                        title: publicBooking.title,
+                        eventType: publicBooking.title,
+                    } : {}),
                 };
             });
             

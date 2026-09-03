@@ -416,7 +416,8 @@ document.addEventListener('DOMContentLoaded', function () {
         ? new Date(event.end)
         : new Date(start.getTime() + (event.extendedProps?.duration || 1) * 60 * 60 * 1000);
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
-      if (start <= dayEnd && end >= dayStart) {
+      // Event end is exclusive: an event ending at 00:00 does not occupy that day.
+      if (start <= dayEnd && end > dayStart) {
         const status = normaliseStatus(event.extendedProps?.status, 'pending');
         const priority = statusPriority[status] || 0;
         if (priority > strongestPriority) {
@@ -486,7 +487,8 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
 
-        if (start <= dayEnd && end >= dayStart) {
+        // Event end is exclusive: an event ending at 00:00 does not occupy that day.
+        if (start <= dayEnd && end > dayStart) {
           const status = normaliseStatus(event.extendedProps?.status, 'pending');
           const priority = statusPriority[status] || 0;
           if (priority > strongestPriority) {

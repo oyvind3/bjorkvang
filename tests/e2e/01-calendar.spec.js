@@ -75,10 +75,10 @@ test.describe('TC-01 · Calendar renders correctly on page load', () => {
     await expect(cell).toHaveClass(/is-pending/);
   });
 
-  test('multi-day booking blocks every date covered by its duration', async ({ page }) => {
+  test('multi-day booking blocks covered dates but not the midnight end date', async ({ page }) => {
     await mockCalendar(page, {
       bookings: [
-        { id: 'basar-2026', date: '2026-05-10', time: '12:00', duration: 48, status: 'confirmed' },
+        { id: 'basar-2026', date: '2026-05-10', time: '12:00', duration: 36, status: 'confirmed' },
       ],
     });
     await page.goto('/booking.html');
@@ -89,6 +89,7 @@ test.describe('TC-01 · Calendar renders correctly on page load', () => {
 
     await expect(page.locator('.fc-daygrid-day[data-date="2026-05-10"]')).toHaveClass(/is-blocked/);
     await expect(page.locator('.fc-daygrid-day[data-date="2026-05-11"]')).toHaveClass(/is-blocked/);
+    await expect(page.locator('.fc-daygrid-day[data-date="2026-05-12"]')).toHaveClass(/is-available/);
   });
 
   test('shows an explicitly public event title without exposing ordinary booking purposes', async ({ page }) => {
