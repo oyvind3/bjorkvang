@@ -74,6 +74,39 @@ test.describe('TC-01 · Calendar renders correctly on page load', () => {
     const cell = page.locator('.fc-daygrid-day[data-date="2026-05-15"]');
     await expect(cell).toHaveClass(/is-pending/);
   });
+
+  test('multi-day booking blocks every date covered by its duration', async ({ page }) => {
+    await mockCalendar(page, {
+      bookings: [
+        { id: 'basar-2026', date: '2026-05-10', time: '12:00', duration: 48, status: 'confirmed' },
+      ],
+    });
+    await page.goto('/booking.html');
+    await page.waitForSelector('.fc-daygrid-day', { state: 'visible' });
+
+    await page.locator('.fc-next-button').click();
+    await page.waitForSelector('.fc-daygrid-day[data-date="2026-05-11"]', { state: 'visible' });
+
+    await expect(page.locator('.fc-daygrid-day[data-date="2026-05-10"]')).toHaveClass(/is-blocked/);
+    await expect(page.locator('.fc-daygrid-day[data-date="2026-05-11"]')).toHaveClass(/is-blocked/);
+  });
+
+  test('shows an explicitly public event title without exposing ordinary booking purposes', async ({ page }) => {
+    await mockCalendar(page, {
+      bookings: [
+        { id: 'public-basar', date: '2026-05-10', time: '12:00', duration: 4, status: 'confirmed', title: 'Basar', eventType: 'Basar' },
+        { id: 'private-party', date: '2026-05-15', time: '12:00', duration: 4, status: 'confirmed' },
+      ],
+    });
+    await page.goto('/booking.html');
+    await page.waitForSelector('.fc-daygrid-day', { state: 'visible' });
+
+    await page.locator('.fc-next-button').click();
+    await page.waitForSelector('.fc-daygrid-day[data-date="2026-05-10"]', { state: 'visible' });
+
+    await expect(page.locator('.fc-daygrid-day[data-date="2026-05-10"]')).toContainText('Basar');
+    await expect(page.locator('.fc-daygrid-day[data-date="2026-05-15"]')).toContainText('Reservasjon');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

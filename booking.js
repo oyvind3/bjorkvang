@@ -551,7 +551,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const hasEnd = Boolean(event.end);
-    const endDate = hasEnd ? new Date(event.end) : new Date(startDate.getTime() + 4 * 60 * 60 * 1000);
+    const suppliedDuration = Number(event.extendedProps?.duration);
+    const durationHours = Number.isFinite(suppliedDuration) && suppliedDuration > 0
+      ? suppliedDuration
+      : 4;
+    const endDate = hasEnd
+      ? new Date(event.end)
+      : new Date(startDate.getTime() + durationHours * 60 * 60 * 1000);
     const safeEnd = Number.isNaN(endDate.getTime()) ? new Date(startDate.getTime() + 4 * 60 * 60 * 1000) : endDate;
 
     const extended = { ...(event.extendedProps || {}) };
@@ -560,7 +566,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const message = extended.message || '';
     const email = extended.email || '';
     const phone = extended.phone || '';
-    const duration = extended.duration || Math.max(1, Math.round((safeEnd - startDate) / (60 * 60 * 1000)));
+    const duration = Number.isFinite(suppliedDuration) && suppliedDuration > 0
+      ? suppliedDuration
+      : Math.max(1, Math.round((safeEnd - startDate) / (60 * 60 * 1000)));
     const spaces = Array.isArray(extended.spaces)
       ? extended.spaces
       : typeof extended.spaces === 'string' && extended.spaces.length > 0
@@ -745,10 +753,11 @@ document.addEventListener('DOMContentLoaded', function () {
       
       return serverEvents.map(booking => {
           return normaliseEvent({
+              title: booking.title || 'Reservasjon',
               start: `${booking.date}T${booking.time}`,
               extendedProps: {
                   ...booking,
-                  eventType: 'Reservasjon',
+                  eventType: booking.eventType || 'Reservasjon',
                   status: booking.status === 'approved' ? 'confirmed' : booking.status
               }
           });

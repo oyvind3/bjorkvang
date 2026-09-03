@@ -2,6 +2,12 @@ const { app } = require('@azure/functions');
 const { createJsonResponse } = require('../../../shared/http');
 const { listBookings } = require('../../../shared/cosmosDb');
 
+// Only bookings explicitly listed here may expose a public event name.
+// All ordinary customer bookings remain anonymised as reservations.
+const PUBLIC_BOOKING_LABELS = new Map([
+    ['booking-1780234276656-4zv4dv4', 'Basar'],
+]);
+
 /**
  * Public calendar endpoint. Masks requester details and only exposes availability.
  */
@@ -21,13 +27,18 @@ app.http('getCalendar', {
             );
 
             // Only expose minimal information for public calendar
-            const bookings = activeBookings.map((booking) => ({
-                id: booking.id,
-                date: booking.date,
-                time: booking.time,
-                duration: booking.duration,
-                status: booking.status === 'approved' ? 'confirmed' : booking.status,
-            }));
+            const bookings = activeBookings.map((booking) => {
+                const publicLabel = PUBLIC_BOOKING_LABELS.get(booking.id);
+
+                return {
+                    id: booking.id,
+                    date: booking.date,
+                    time: booking.time,
+                    duration: booking.duration,
+                    status: booking.status === 'approved' ? 'confirmed' : booking.status,
+                    ...(publicLabel ? { title: publicLabel, eventType: publicLabel } : {}),
+                };
+            });
             
             context.log(`getCalendar: Successfully retrieved ${bookings.length} bookings`);
             return createJsonResponse(200, { bookings }, request);
