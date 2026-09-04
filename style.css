@@ -2008,16 +2008,21 @@ button {
 }
 
 #calendar .fc-daygrid-event-harness {
-    overflow: hidden;
-    max-width: 100%;
+    /* FullCalendar makes this wider than one cell for multi-day events. */
+    overflow: visible;
+    max-width: none;
 }
 
 #calendar .fc-daygrid-day-frame,
-#calendar .fc-daygrid-day-events,
 #calendar .fc-event-main {
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
+}
+
+#calendar .fc-daygrid-day-events {
+    min-width: 0;
+    overflow: visible;
 }
 
 #calendar .fc-event.fc-event--pending {

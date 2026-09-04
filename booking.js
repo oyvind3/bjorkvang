@@ -1096,6 +1096,10 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       locale: 'nb',
       firstDay: 1,
+      // A booking that continues after midnight must also be rendered on the
+      // following date. FullCalendar otherwise uses a 09:00 threshold, which
+      // can leave the day marked as reserved without showing the event bar.
+      nextDayThreshold: '00:00:00',
       selectable: true,
       selectMirror: true,
       dayMaxEvents: true,

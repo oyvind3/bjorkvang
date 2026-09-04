@@ -89,6 +89,11 @@ test.describe('TC-01 · Calendar renders correctly on page load', () => {
 
     await expect(page.locator('.fc-daygrid-day[data-date="2026-05-10"]')).toHaveClass(/is-blocked/);
     await expect(page.locator('.fc-daygrid-day[data-date="2026-05-11"]')).toHaveClass(/is-blocked/);
+    const eventBox = await page.locator('.fc-daygrid-day[data-date="2026-05-10"] .fc-event').boundingBox();
+    const sundayBox = await page.locator('.fc-daygrid-day[data-date="2026-05-11"]').boundingBox();
+    expect(eventBox).not.toBeNull();
+    expect(sundayBox).not.toBeNull();
+    expect(eventBox.x + eventBox.width).toBeGreaterThan(sundayBox.x + sundayBox.width / 2);
     await expect(page.locator('.fc-daygrid-day[data-date="2026-05-12"]')).toHaveClass(/is-available/);
   });
 
