@@ -909,6 +909,24 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     // ── Slutt gjentakende bookinger ─────────────────────────────────────────
 
+    // Bekreftede datoer t.o.m. 2027. Behold én felles datakilde for både
+    // kalenderen og produksjons-seedingen, og ikke legg inn en reservehendelse
+    // når datoen allerede dekkes av en bekreftet booking fra API-et.
+    const confirmedBookings = window.BjorkvangConfirmedBookings;
+    if (confirmedBookings) {
+      const knownEvents = [...eventList, ...seedEvents];
+      confirmedBookings.dates.forEach((item) => {
+        const alreadyCovered = knownEvents.some((event) =>
+          confirmedBookings.bookingCoversDate(event, item.date)
+        );
+        if (!alreadyCovered) {
+          const event = confirmedBookings.buildCalendarEvent(item);
+          seedEvents.push(event);
+          knownEvents.push(event);
+        }
+      });
+    }
+
     const existingKeys = new Set(
       eventList.map((event) => {
         const startIso = new Date(event.start).toISOString();

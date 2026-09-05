@@ -23,7 +23,8 @@ const createBooking = (bookingData) => {
     if (!requesterName || typeof requesterName !== 'string') {
         throw new Error('Invalid or missing requesterName');
     }
-    if (!requesterEmail || typeof requesterEmail !== 'string') {
+    if ((!requesterEmail && bookingData.adminCreated !== true)
+        || (requesterEmail && typeof requesterEmail !== 'string')) {
         throw new Error('Invalid or missing requesterEmail');
     }
     
@@ -33,7 +34,7 @@ const createBooking = (bookingData) => {
         date: date.trim(),
         time: time.trim(),
         requesterName: requesterName.trim(),
-        requesterEmail: requesterEmail.trim(),
+        requesterEmail: requesterEmail ? requesterEmail.trim() : '',
         message: (message || '').trim(),
         duration: duration,
         eventType: eventType,

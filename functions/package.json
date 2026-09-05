@@ -6,6 +6,7 @@
   "scripts": {
     "start": "func start",
     "test": "node test-functions.js",
+    "test:confirmed-bookings": "node --test test/confirmed-blocked-dates.test.js",
     "test:vipps": "node test-vipps.js",
     "test:vipps:e2e": "node test-vipps-e2e.js",
     "test:cosmos": "node test-cosmos.js",
