@@ -10,10 +10,11 @@
  *   node functions/scripts/seed-recurring-bookings.js           (dry-run, lister datoer)
  *   node functions/scripts/seed-recurring-bookings.js --post    (poster til API)
  *
- * Requires API_BASE and ADMIN_TOKEN environment variables when posting.
+ * Requires API_BASE and ADMIN_KEY environment variables when posting.
  */
 
 const API_BASE = process.env.API_BASE || 'http://localhost:7071/api';
+const ADMIN_KEY = process.env.ADMIN_KEY || process.env.ADMIN_TOKEN || '';
 const DRY_RUN = !process.argv.includes('--post');
 
 // ─── Helper: format date as YYYY-MM-DD (local time) ─────────────────────────
@@ -176,6 +177,10 @@ if (DRY_RUN) {
     console.log('\nKjør med --post for å sende til API.');
 } else {
     (async () => {
+        if (!ADMIN_KEY) {
+            throw new Error('ADMIN_KEY må være satt når --post brukes. Ingen endringer er utført.');
+        }
+
         console.log(`Poster ${bookings.length} bookinger til ${API_BASE} ...`);
         let ok = 0, fail = 0;
         for (const b of bookings) {
@@ -183,8 +188,16 @@ if (DRY_RUN) {
                 // Step 1: Create booking (will be 'pending' from the API)
                 const res = await fetch(`${API_BASE}/booking`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify(b),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Admin-Key': ADMIN_KEY,
+                    },
+                    body: JSON.stringify({
+                        ...b,
+                        adminCreated: true,
+                        sendConfirmationEmail: false,
+                    }),
                 });
                 if (!res.ok) {
                     const err = await res.text();
@@ -203,7 +216,11 @@ if (DRY_RUN) {
                 // Step 2: Immediately approve so it shows as 'Reservert' in calendar
                 const approveRes = await fetch(`${API_BASE}/booking/approve?id=${encodeURIComponent(bookingId)}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Admin-Key': ADMIN_KEY,
+                    },
                     body: JSON.stringify({ message: '' }),
                 });
                 if (approveRes.ok) {

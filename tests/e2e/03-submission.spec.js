@@ -1,8 +1,30 @@
 // TC-14 to TC-18: Form submission, confirmation receipt and error handling
 const { test, expect } = require('@playwright/test');
 
+async function addTurnstileToken(page) {
+  await page.evaluate(() => {
+    const form = document.getElementById('booking-form');
+    const token = document.createElement('input');
+    token.type = 'hidden';
+    token.name = 'cf-turnstile-response';
+    token.value = 'test-turnstile-token';
+    form.appendChild(token);
+  });
+}
+
+async function mockTurnstileScript(page) {
+  await page.route('https://challenges.cloudflare.com/turnstile/v0/api.js*', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: 'window.turnstile = { reset() {} };',
+    })
+  );
+}
+
 /** Fill the booking form with valid data ready for submission */
 async function fillValidForm(page, { paymentMethod = 'bank' } = {}) {
+  await mockTurnstileScript(page);
   await page.route('**/api/booking/calendar', (route) =>
     route.fulfill({
       status: 200,
@@ -22,15 +44,25 @@ async function fillValidForm(page, { paymentMethod = 'bank' } = {}) {
   // Set date via Flatpickr's API to ensure it registers the value
   await page.evaluate(() => {
     const el = document.getElementById('date');
-    if (el._flatpickr) el._flatpickr.setDate('2026-09-20', true);
-    else el.value = '2026-09-20';
+    if (el._flatpickr) el._flatpickr.setDate('2027-09-20', true);
+    else el.value = '2027-09-20';
   });
-  await page.locator('#time').fill('14:00');
+  await page.locator('#time').selectOption('14:00');
   await page.locator('#duration').fill('4');
   await page.locator('#event-type').selectOption('Familiefeiring');
   await page.locator('input[name="spaces"][value="Peisestue"]').check();
+  await page.locator('#age-verified').check();
   await page.locator(`input[name="paymentMethod"][value="${paymentMethod}"]`).check();
+  await addTurnstileToken(page);
 }
+
+test('booking form embeds Turnstile with the configured site key and action', async ({ page }) => {
+  await fillValidForm(page);
+
+  const widget = page.locator('#booking-turnstile');
+  await expect(widget).toHaveAttribute('data-sitekey', '0x4AAAAAAEr2472ea15FgRMy');
+  await expect(widget).toHaveAttribute('data-action', 'booking_request');
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 test.describe('TC-14 · Happy path submission – bank transfer', () => {
@@ -39,13 +71,14 @@ test.describe('TC-14 · Happy path submission – bank transfer', () => {
   }) => {
     await fillValidForm(page, { paymentMethod: 'bank' });
 
-    await page.route('**/api/booking', (route) =>
-      route.fulfill({
+    await page.route('**/api/booking', (route) => {
+      expect(route.request().postDataJSON()['cf-turnstile-response']).toBe('test-turnstile-token');
+      return route.fulfill({
         status: 202,
         contentType: 'application/json',
         body: JSON.stringify({ id: 'booking-abc123', status: 'pending', paymentMethod: 'bank' }),
-      })
-    );
+      });
+    });
 
     await page.locator('#submit-btn').click();
 
@@ -143,6 +176,7 @@ test.describe('TC-16 · Double-booking conflict (409)', () => {
   test('pending bookings do NOT show as conflict (form should be submittable)', async ({
     page,
   }) => {
+    await mockTurnstileScript(page);
     // A pending event on the same date should NOT trigger a 409 from the backend.
     // From the frontend's perspective: the booking still goes through (submit is allowed).
     // We mock a 202 to verify the form submits normally alongside a pending booking.
@@ -152,7 +186,7 @@ test.describe('TC-16 · Double-booking conflict (409)', () => {
         contentType: 'application/json',
         body: JSON.stringify({
           bookings: [
-            { id: 'pending-1', date: '2026-09-20', time: '14:00', duration: 4, status: 'pending' },
+            { id: 'pending-1', date: '2027-09-20', time: '14:00', duration: 4, status: 'pending' },
           ],
         }),
       })
@@ -166,13 +200,15 @@ test.describe('TC-16 · Double-booking conflict (409)', () => {
     await page.locator('#phone').fill('12345678');
     await page.evaluate(() => {
       const el = document.getElementById('date');
-      if (el._flatpickr) el._flatpickr.setDate('2026-09-20', true);
-      else el.value = '2026-09-20';
+      if (el._flatpickr) el._flatpickr.setDate('2027-09-20', true);
+      else el.value = '2027-09-20';
     });
-    await page.locator('#time').fill('14:00');
+    await page.locator('#time').selectOption('14:00');
     await page.locator('#duration').fill('4');
     await page.locator('#event-type').selectOption('Familiefeiring');
     await page.locator('input[name="spaces"][value="Peisestue"]').check();
+    await page.locator('#age-verified').check();
+    await addTurnstileToken(page);
 
     await page.route('**/api/booking', (route) =>
       route.fulfill({

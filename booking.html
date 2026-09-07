@@ -15,6 +15,7 @@
     <link rel="canonical" href="https://bjørkvang.no/booking">
     <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://challenges.cloudflare.com">
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
@@ -573,6 +574,18 @@
                         </div>
                     </fieldset>
 
+                    <div class="turnstile-field">
+                        <div
+                            id="booking-turnstile"
+                            class="cf-turnstile"
+                            data-sitekey="0x4AAAAAAEr2472ea15FgRMy"
+                            data-action="booking_request"
+                            data-theme="auto"
+                            data-size="flexible"
+                        ></div>
+                        <p class="form-help">Verifisering mot automatiserte innsendinger.</p>
+                    </div>
+
                     <div class="form-actions">
                         <button class="button" type="submit" id="submit-btn">Send bookingforespørsel</button>
                         <p id="booking-status" class="form-status" role="status" aria-live="polite"></p>
@@ -795,6 +808,7 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/no.js"></script>
     <script src="confirmed-blocked-dates.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script src="booking.js"></script>
     <script>
         (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",["places"]);for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.googleapis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once."):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({

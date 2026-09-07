@@ -55,12 +55,13 @@ async function approveBooking(apiBase, id, adminKey, fetchImpl = fetch) {
   }
 }
 
-async function createBooking(apiBase, item, fetchImpl = fetch) {
+async function createBooking(apiBase, item, adminKey, fetchImpl = fetch) {
   const response = await fetchImpl(`${apiBase}/booking`, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      'X-Admin-Key': adminKey,
     },
     body: JSON.stringify(buildAdminPayload(item)),
   });
@@ -88,7 +89,7 @@ async function seed({ apiBase, adminKey, post, fetchImpl = fetch }) {
       continue;
     }
 
-    const id = pendingSeed?.id || await createBooking(apiBase, item, fetchImpl);
+    const id = pendingSeed?.id || await createBooking(apiBase, item, adminKey, fetchImpl);
     await approveBooking(apiBase, id, adminKey, fetchImpl);
     (pendingSeed ? result.resumed : result.created).push(item.date);
 

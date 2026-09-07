@@ -2365,7 +2365,10 @@ async function createManualBooking(event) {
     try {
         const res = await fetch(`${API_BASE_URL}/booking`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Admin-Key': getAdminKey(),
+            },
             body: JSON.stringify(payload)
         });
 

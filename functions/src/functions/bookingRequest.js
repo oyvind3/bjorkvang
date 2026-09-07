@@ -2,10 +2,11 @@ const { app } = require('@azure/functions');
 const crypto = require('crypto');
 const { sendEmail } = require('../../shared/email');
 const { sendSms, sendSmsToAdminGroup, buildSmsMessage, deriveSmsSigningToken } = require('../../shared/sms');
-const { createJsonResponse, parseBody, resolveBaseUrl } = require('../../shared/http');
+const { createJsonResponse, parseBody, requireAdminKey, resolveBaseUrl } = require('../../shared/http');
 const { saveBooking, listBookings } = require('../../shared/cosmosDb');
 const { generateEmailHtml } = require('../../shared/emailTemplate');
 const { checkForDoubleBooking } = require('../../shared/conflictCheck');
+const { verifyTurnstile } = require('../../shared/turnstile');
 
 /**
  * Handle incoming booking submissions from the public website.
@@ -27,6 +28,29 @@ app.http('bookingRequest', {
         const isAdminBooking = adminCreated === true;
         // For admin bookings, emails are opt-in (require explicit sendConfirmationEmail flag)
         const suppressEmails = isAdminBooking && sendConfirmationEmail !== true;
+
+        // Public booking requests must redeem a fresh Turnstile token before
+        // any of the existing validation, persistence or notification logic.
+        if (isAdminBooking) {
+            const authError = requireAdminKey(request);
+            if (authError) return authError;
+        } else {
+            const turnstile = await verifyTurnstile({
+                token: body['cf-turnstile-response'],
+                expectedAction: 'booking_request',
+                request,
+                context,
+            });
+            if (!turnstile.success) {
+                context.warn('bookingRequest: Turnstile verification rejected', {
+                    reason: turnstile.reason,
+                    errorCodes: turnstile.errorCodes || [],
+                });
+                return createJsonResponse(403, {
+                    error: 'Kunne ikke bekrefte at du er et menneske. Oppdater verifiseringen og prøv igjen.',
+                }, request);
+            }
+        }
 
         // Validate age verification (required for public bookings)
         if (!isAdminBooking && ageVerified !== true) {

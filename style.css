@@ -2351,6 +2351,20 @@ label {
     flex-wrap: wrap;
 }
 
+.turnstile-field {
+    display: grid;
+    gap: 0.35rem;
+    justify-items: start;
+}
+
+.turnstile-field .cf-turnstile {
+    width: min(100%, 300px);
+}
+
+.turnstile-field .form-help {
+    margin: 0;
+}
+
 .form-footnote {
     margin: 0;
     color: var(--text-secondary);

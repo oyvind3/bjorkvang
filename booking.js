@@ -328,6 +328,7 @@ document.addEventListener('DOMContentLoaded', function () {
           paymentMethod: bookingDetails.paymentMethod || 'vipps',
           paymentStatus: 'unpaid',
           totalAmount: bookingDetails.totalAmount || null,
+          'cf-turnstile-response': bookingDetails.turnstileResponse,
       };
 
       const response = await fetch(BOOKING_API_ENDPOINT, {
@@ -1384,6 +1385,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const selectedServices = Array.from(form.querySelectorAll('input[name="services"]:checked')).map((input) => input.value);
       const isWedding = selectedSpaces.includes('Bryllupspakke');
       const paymentMethod = formValues.paymentMethod || 'vipps';
+      const turnstileResponse = formValues['cf-turnstile-response'] || '';
 
       // --- Per-field inline error helper ---
       function fieldError(fieldEl, msg) {
@@ -1413,6 +1415,12 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!dateValue) { return fieldError(form.querySelector('#date'), 'Dato er påkrevd.'); }
       if (!timeValue) { return fieldError(form.querySelector('#time'), 'Velg oppstartstid.'); }
       if (!eventType) { return fieldError(form.querySelector('#event-type'), 'Velg formål med leie.'); }
+      if (!turnstileResponse) {
+        showStatus('Fullfør sikkerhetskontrollen før du sender forespørselen.', 'error');
+        form.querySelector('#booking-turnstile')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        isSubmitting = false;
+        return;
+      }
 
       // Clear any leftover inline errors before continuing
       form.querySelectorAll('.field-error-hint').forEach(el => el.remove());
@@ -1516,6 +1524,7 @@ document.addEventListener('DOMContentLoaded', function () {
         isMember: form.querySelector('#is-member')?.checked ?? false,
         cateringContact: form.querySelector('#catering-contact')?.checked ?? false,
         ageVerified: form.querySelector('#age-verified')?.checked ?? false,
+        turnstileResponse,
       };
 
       // --- Submit booking request (payment preference stored, no payment taken now) ---
@@ -1586,6 +1595,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } catch (error) {
         console.error('Booking submit error:', error);
         showStatus(error.message || 'Kunne ikke sende bookingforesp\u00f8rsel. Pr\u00f8v igjen.', 'error');
+        window.turnstile?.reset();
       }
       isSubmitting = false;
     });
@@ -1736,6 +1746,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (confirmation) confirmation.hidden = true;
     if (formEl) { formEl.hidden = false; }
     if (sectionHeading) sectionHeading.hidden = false;
+    window.turnstile?.reset();
     // Scroll smoothly back to the form
     const target = sectionHeading || formEl;
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
