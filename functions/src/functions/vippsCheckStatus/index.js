@@ -1,7 +1,7 @@
 const { app } = require('@azure/functions');
 const { createJsonResponse, parseBody } = require('../../../shared/http');
 const { getPayment, capturePayment } = require('../../../shared/vipps');
-const { getBooking, updateBookingStatus } = require('../../../shared/cosmosDb');
+const { getBooking, updateBookingStatus, updateBookingFields } = require('../../../shared/cosmosDb');
 const { sendEmail } = require('../../../shared/email');
 const { generateEmailHtml } = require('../../../shared/emailTemplate');
 const { sendSmsToAdminGroup, buildSmsMessage } = require('../../../shared/sms');
@@ -13,7 +13,7 @@ app.http('vippsCheckStatus', {
     handler: async (request, context) => {
         try {
             const body = await parseBody(request);
-            const { orderId } = body;
+            const { orderId, paymentType, bookingId } = body;
 
             if (!orderId) {
                 return createJsonResponse(400, { error: 'Missing orderId' });
@@ -116,6 +116,27 @@ app.http('vippsCheckStatus', {
                 } catch (updateError) {
                     context.error(`Failed to update booking after payment: ${updateError.message}`);
                     // Don't fail the request - payment was successful
+                }
+            }
+
+            // Deposit links are created on demand and use the dep-* prefix.
+            // The booking ID is supplied by the payment page because the
+            // sanitized order reference cannot reliably reconstruct it.
+            if ((status === 'AUTHORIZED' || status === 'CAPTURED') &&
+                (paymentType === 'deposit' || orderId.startsWith('dep-')) && bookingId) {
+                try {
+                    const booking = await getBooking(bookingId, null);
+                    if (booking && !booking.depositPaid) {
+                        await updateBookingFields(bookingId, null, {
+                            depositPaid: true,
+                            depositPaidAt: new Date().toISOString(),
+                            depositVippsOrderId: orderId
+                        });
+                        context.info(`Deposit payment successful for booking ${bookingId}`);
+                    }
+                } catch (updateError) {
+                    context.error(`Failed to update deposit after payment: ${updateError.message}`);
+                    // Do not turn a successful Vipps payment into a client error.
                 }
             }
 

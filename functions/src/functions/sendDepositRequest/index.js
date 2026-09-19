@@ -4,7 +4,6 @@ const { getBooking, updateBookingFields } = require('../../../shared/cosmosDb');
 const { sendEmail } = require('../../../shared/email');
 const { sendSms, buildSmsMessage } = require('../../../shared/sms');
 const { generateEmailHtml } = require('../../../shared/emailTemplate');
-const vipps = require('../../../shared/vipps');
 
 const escapeHtml = (str) => String(str || '').replace(/[&<>"']/g, (m) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -15,7 +14,8 @@ const escapeHtml = (str) => String(str || '').replace(/[&<>"']/g, (m) => ({
  * POST /api/booking/send-deposit
  * Body: { id }
  *
- * - If booking.paymentMethod === 'vipps': creates a Vipps payment link and emails it.
+ * - If booking.paymentMethod === 'vipps': emails a durable link that creates
+ *   a fresh Vipps payment session when opened.
  * - If 'bank': emails bank account details.
  * Idempotent: returns 200 if depositRequested is already true.
  */
@@ -126,31 +126,12 @@ app.http('sendDepositRequest', {
                 Forhåndsbetaling er ikke refunderbart ved kansellering uten saklig grunn.
             </p>`;
 
-        let depositVippsOrderId = null;
-        let vippsUrl = null;
+        // Vipps redirect URLs expire after 10 minutes. Create the short-lived
+        // Vipps URL only when the customer opens the durable payment page.
+        const paymentLink = `${websiteUrl}/complete-payment.html?payment=deposit&bookingId=${encodeURIComponent(id)}`;
         let emailHtml, emailText, emailSubject;
 
         if (paymentMethod === 'vipps') {
-            // Sanitise booking ID for Vipps reference (alphanumeric only, max 50 chars)
-            const safeId = id.replace(/[^a-zA-Z0-9]/g, '').slice(0, 24);
-            const orderId = `dep-${safeId}-${Date.now().toString(36)}`.slice(0, 50);
-            const returnUrl = `${websiteUrl}/booking?depositReturn=1&orderId=${encodeURIComponent(orderId)}`;
-
-            try {
-                const vippsResponse = await vipps.initiatePayment({
-                    amount: depositNOK * 100, // øre
-                    orderId,
-                    returnUrl,
-                    text: `Forhåndsbetaling – Bjørkvang (${booking.eventType || 'leie'})`,
-                    phoneNumber: booking.phone || undefined
-                });
-                vippsUrl = vippsResponse.redirectUrl;
-                depositVippsOrderId = orderId;
-            } catch (err) {
-                context.error('sendDepositRequest: Failed to create Vipps payment', err);
-                return createJsonResponse(502, { error: 'Kunne ikke opprette Vipps-betaling.' }, request);
-            }
-
             emailSubject = `Forhåndsbetalingsforespørsel – Bjørkvang leie (${booking.date || ''})`;
             emailText = [
                 `Hei ${booking.requesterName},`,
@@ -163,7 +144,7 @@ app.http('sendDepositRequest', {
                 `Estimert totalpris: kr ${totalNOK.toLocaleString('nb-NO')}`,
                 `Forhåndsbetaling nå (50%): kr ${depositNOK.toLocaleString('nb-NO')}`,
                 '',
-                `Betal med Vipps: ${vippsUrl}`,
+                `Betal med Vipps: ${paymentLink}`,
                 '',
                 `Restbeløpet (kr ${remainingNOK.toLocaleString('nb-NO')}) faktureres etter arrangementet.`,
                 'Forhåndsbetaling er ikke refunderbart ved kansellering uten saklig grunn.',
@@ -183,7 +164,7 @@ app.http('sendDepositRequest', {
                     <p>Har du spørsmål, ta kontakt med oss på
                     <a href="mailto:styret@bjorkvang.org">styret@bjorkvang.org</a>.</p>
                     <p>Med vennlig hilsen,<br>Styret ved Bjørkvang</p>`,
-                action: { text: 'Betal kr ' + depositNOK.toLocaleString('nb-NO') + ' med Vipps', url: vippsUrl, color: '#ff5b24', rounded: true }
+                action: { text: 'Betal kr ' + depositNOK.toLocaleString('nb-NO') + ' med Vipps', url: paymentLink, color: '#ff5b24', rounded: true }
             });
         } else {
             // Bank transfer
@@ -246,7 +227,7 @@ app.http('sendDepositRequest', {
         // --- SMS med betalingslenke ---
         if (booking.phone) {
             let depositSmsBody;
-            if (paymentMethod === 'vipps' && vippsUrl) {
+            if (paymentMethod === 'vipps') {
                 depositSmsBody = buildSmsMessage('customer.depositReadyVipps', {
                     requesterName: booking.requesterName,
                     date: booking.date,
@@ -269,10 +250,6 @@ app.http('sendDepositRequest', {
             depositRequestedAt: now,
             depositAmount: depositNOK
         };
-        if (depositVippsOrderId) {
-            updateFields.depositVippsOrderId = depositVippsOrderId;
-        }
-
         const updated = await updateBookingFields(id.trim(), null, updateFields);
         context.info(`sendDepositRequest: sent to ${booking.requesterEmail} for booking ${id} via ${paymentMethod}`);
 
@@ -281,7 +258,7 @@ app.http('sendDepositRequest', {
             sentTo: booking.requesterEmail,
             depositAmount: depositNOK,
             paymentMethod,
-            ...(vippsUrl ? { vippsUrl } : {}),
+            ...(paymentMethod === 'vipps' ? { paymentLink } : {}),
             booking: updated || booking
         }, request);
     }

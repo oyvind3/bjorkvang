@@ -271,12 +271,13 @@
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const bookingId = urlParams.get('bookingId');
+        const paymentType = urlParams.get('payment') || 'contract';
         const status = urlParams.get('status');
         const orderId = urlParams.get('orderId');
 
         // Handle return from Vipps
         if (status === 'success' && orderId) {
-            handleVippsReturn(orderId);
+            handleVippsReturn(orderId, paymentType, bookingId);
         } else if (bookingId) {
             loadBookingDetails(bookingId);
         } else {
@@ -294,15 +295,23 @@
                 const booking = await response.json();
 
                 // Check if payment is already done
-                if (booking.paymentStatus === 'paid') {
+                if ((paymentType === 'deposit' && booking.depositPaid) ||
+                    (paymentType !== 'deposit' && booking.paymentStatus === 'paid')) {
                     showSuccess();
                     return;
                 }
 
-                // Check if contract is signed
-                const contract = booking.contract || {};
-                if (!contract.signedAt || !contract.landlordSignedAt) {
-                    throw new Error('Kontrakten må signeres av begge parter før betaling');
+                if (paymentType === 'deposit' && !booking.depositRequested) {
+                    throw new Error('Forhåndsbetalingen er ikke sendt ennå');
+                }
+
+                // Contract payments require both signatures. Deposit payments
+                // are enabled by the explicit deposit request instead.
+                if (paymentType !== 'deposit') {
+                    const contract = booking.contract || {};
+                    if (!contract.signedAt || !contract.landlordSignedAt) {
+                        throw new Error('Kontrakten må signeres av begge parter før betaling');
+                    }
                 }
 
                 // Display booking details
@@ -371,7 +380,10 @@
             const timeout = setTimeout(() => controller.abort(), 10000);
 
             try {
-                const response = await fetch(`${API_BASE}/vipps/initiate-contract-payment`, {
+                const endpoint = paymentType === 'deposit'
+                    ? 'vipps/initiate-deposit-payment'
+                    : 'vipps/initiate-contract-payment';
+                const response = await fetch(`${API_BASE}/${endpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ bookingId }),
@@ -403,7 +415,7 @@
             }
         }
 
-        async function handleVippsReturn(orderId) {
+        async function handleVippsReturn(orderId, paymentType, bookingId) {
             document.getElementById('loading-state').innerHTML = '<div class="spinner"></div><p>Verifiserer betaling...</p>';
 
             try {
@@ -411,7 +423,7 @@
                 const response = await fetch(`${API_BASE}/vipps/check-status`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId })
+                    body: JSON.stringify({ orderId, paymentType, bookingId })
                 });
 
                 if (!response.ok) {

@@ -45,9 +45,10 @@ app.http('sendReminder', {
                 return createJsonResponse(400, { error: 'Ingen aktiv påminnelse å sende for denne bookingen.' });
             }
 
-            const websiteUrl = process.env.WEBSITE_URL || 'https://bjorkvang.org';
+            const websiteUrl = (process.env.WEBSITE_URL || 'https://bjorkvang.org').replace(/\/$/, '');
             const reminderToken = booking.smsSigningToken || deriveSmsSigningToken(booking.signingToken);
             const contractLink = `${websiteUrl}/leieavtale.html?id=${encodeURIComponent(booking.id)}${reminderToken ? `&signingToken=${encodeURIComponent(reminderToken)}` : ''}`;
+            const depositPaymentLink = `${websiteUrl}/complete-payment.html?payment=deposit&bookingId=${encodeURIComponent(booking.id)}`;
             const bankAccount = process.env.BANK_ACCOUNT || '1810.40.02508';
 
             const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (m) => ({
@@ -97,10 +98,12 @@ app.http('sendReminder', {
             } else if (reminderType === 'deposit') {
                 subject = `Påminnelse: Forhåndsbetaling forfaller – ${formattedDate}`;
                 previewText = `Vi venter fortsatt på forhåndsbetalingen for ${formattedDate}.`;
-                actionButton = { text: '📄 Se leieavtalen', url: contractLink };
+                actionButton = booking.paymentMethod === 'vipps'
+                    ? { text: '💳 Betal med Vipps', url: depositPaymentLink, color: '#ff5b24', rounded: true }
+                    : { text: '📄 Se leieavtalen', url: contractLink };
                 const depositStr = depositNOK ? `kr\u00a0${depositNOK.toLocaleString('nb-NO')}` : '(oppgitt beløp)';
                 const paymentInfoHtml = booking.paymentMethod === 'vipps'
-                    ? `<p>Sjekk e-posten du tidligere mottok med betalingslenke for Vipps, eller ta kontakt med styret.</p>`
+                    ? `<p>Bruk knappen under for å åpne en ny Vipps-betaling. Betalingslenken opprettes når du klikker.</p>`
                     : `<p>Betal til kontonummer <strong>${escapeHtml(bankAccount)}</strong> og merk betalingen med <strong>${escapeHtml(id.slice(0, 8))}</strong>.</p>`;
                 htmlContent = `
                     <p>Hei ${safeName},</p>

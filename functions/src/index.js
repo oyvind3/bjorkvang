@@ -95,6 +95,7 @@ loadFunction('vippsMembershipStatus', './functions/vippsMembershipStatus');
 loadFunction('vippsDonate', './functions/vippsDonate');
 loadFunction('vippsInitiateBooking', './functions/vippsInitiateBooking');
 loadFunction('vippsInitiateContractPayment', './functions/vippsInitiateContractPayment');
+loadFunction('vippsInitiateDepositPayment', './functions/vippsInitiateDepositPayment');
 loadFunction('vippsCheckStatus', './functions/vippsCheckStatus');
 loadFunction('vippsCallback', './functions/vippsCallback');
 loadFunction('depositPaid', './functions/depositPaid');
